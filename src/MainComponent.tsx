@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useWallet } from '@provablehq/aleo-wallet-adaptor-react';
 
 const DOO_PROGRAM_ID = 'dark_optimistic_oracle.aleo';
@@ -10,6 +10,7 @@ export default function MainComponent() {
   // Assertion state
   const [assertId, setAssertId] = useState('');
   const [assertTitle, setAssertTitle] = useState('');
+  const [assertRawContent, setAssertRawContent] = useState('');
   const [assertContent, setAssertContent] = useState('');
   const [assertCost, setAssertCost] = useState('100000000');
   const [voterStake, setVoterStake] = useState('1000000');
@@ -20,6 +21,32 @@ export default function MainComponent() {
   // Vote state
   const [voteId, setVoteId] = useState('');
   const [voteRecord, setVoteRecord] = useState('');
+
+  // Automatically hash the raw text content into an Aleo field
+  useEffect(() => {
+    const computeHash = async () => {
+      if (!assertRawContent) {
+        setAssertContent('');
+        return;
+      }
+      try {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(assertRawContent);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        let bigIntHash = 0n;
+        for (let i = 0; i < hashArray.length; i++) {
+          bigIntHash = (bigIntHash << 8n) + BigInt(hashArray[i]);
+        }
+        const ALEO_FIELD_MODULUS = 8444461749428370424248824938781546531375899335154063827935233455917409239041n;
+        const fieldVal = bigIntHash % ALEO_FIELD_MODULUS;
+        setAssertContent(fieldVal.toString() + 'field');
+      } catch (err) {
+        console.error('Failed to hash content', err);
+      }
+    };
+    computeHash();
+  }, [assertRawContent]);
 
   const executeTransaction = async (func: string, inputs: any[]) => {
     if (!connected || !address) throw new Error('Wallet not connected');
@@ -45,7 +72,7 @@ export default function MainComponent() {
     executeTransaction('assertion', [
       `${assertId}field`,
       `${assertTitle}field`,
-      `${assertContent}field`,
+      assertContent, // Passed as a complete field directly
       `${assertCost}u128`,
       `${voterStake}u128`,
       `10000u32`, // dummy dispute deadline
@@ -104,10 +131,19 @@ export default function MainComponent() {
               placeholder="Title (Field)" 
               value={assertTitle} onChange={e => setAssertTitle(e.target.value)} 
             />
+            <textarea 
+              className="input-field" 
+              placeholder="Content text (will be hashed into a Field)" 
+              value={assertRawContent} onChange={e => setAssertRawContent(e.target.value)} 
+              rows={4}
+              style={{ resize: 'vertical' }}
+            />
             <input 
               className="input-field" 
               placeholder="Content Hash (Field)" 
-              value={assertContent} onChange={e => setAssertContent(e.target.value)} 
+              value={assertContent} 
+              readOnly
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', color: '#94a3b8' }}
             />
             <input 
               className="input-field" 
