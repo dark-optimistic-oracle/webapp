@@ -1,0 +1,10 @@
+# Development Process
+
+1. **Initialization:** Started by creating a Vite + React application in the `webapp` directory using the `react-ts` template.
+2. **Dependencies:** Added Aleo wallet adapter packages (`@demox-labs/aleo-wallet-adapter-react`, `@demox-labs/aleo-wallet-adapter-reactui`, `@demox-labs/aleo-wallet-adapter-base`) to handle Aleo Shield wallet integration. Also added `lucide-react` for UI icons and `vitest` alongside `@testing-library/react` for unit testing.
+3. **Styling & UI:** 
+   - Overhauled `index.css` and `App.css` to introduce a premium dark theme. 
+   - Leveraged glassmorphism effects for the primary interaction cards, keeping in line with the requested modern aesthetic inspired by `0tru.com` and Aleo's official branding.
+4. **App Integration:** Built the layout in `App.tsx` incorporating the `WalletProvider` to ensure the application could auto-connect with testnet/localnet environments.
+5. **Smart Contract Logic Integration:** Developed `MainComponent.tsx` containing the logic to interact with the Aleo program `dark_optimistic_oracle.aleo`. It encapsulates forms for Assertions, Disputes, Voting Rights, and Rewards collection, triggering transaction requests via the wallet's `requestTransaction` method.
+6. **Testing Setup:** Configured `vitest.config.ts` and `vitest.setup.ts`, creating a test suite (`MainComponent.test.tsx`) to verify the basic functionality of the frontend (tab switching, UI rendering) without requiring a live blockchain node.
