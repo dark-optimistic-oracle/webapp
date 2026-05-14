@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import MainComponent from './MainComponent';
 
 // Mock the useWallet hook
-vi.mock('@demox-labs/aleo-wallet-adapter-react', () => ({
+vi.mock('@provablehq/aleo-wallet-adaptor-react', () => ({
   useWallet: () => ({
     publicKey: 'aleo1mockaddress',
     requestTransaction: vi.fn().mockResolvedValue('mock_tx_id'),

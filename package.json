@@ -11,9 +11,12 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@demox-labs/aleo-wallet-adapter-base": "latest",
-    "@demox-labs/aleo-wallet-adapter-react": "latest",
-    "@demox-labs/aleo-wallet-adapter-reactui": "latest",
+    "@provablehq/aleo-wallet-adaptor-core": "latest",
+    "@provablehq/aleo-wallet-adaptor-react": "latest",
+    "@provablehq/aleo-wallet-adaptor-react-ui": "latest",
+    "@provablehq/aleo-wallet-adaptor-shield": "latest",
+    "@provablehq/aleo-types": "latest",
+    "@provablehq/aleo-wallet-standard": "latest",
     "lucide-react": "^0.300.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"

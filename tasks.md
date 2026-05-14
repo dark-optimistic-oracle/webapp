@@ -4,6 +4,7 @@ Tech used:
 - The application shoudl use react and Vite.
 - Connect to the Shield wallet (https://aleo.org/shield/) using https://developer.aleo.org/sdk/wallet-adapter/wallet_adapter
 - Use dark branding similar to Aleo's own. Use styling and illustrations inspired bu https://0tru.com , which was created by a consultant for me. If you cannot create the horse images, I'll provide an MCP server for image and video creation later.
+- Use pnpm package manager.
 
 Product:
 - The product Darks Optimistic Oracle is similar to UMA (https://uma.xyz/), but it uses Zero Knowledge cryptography in order to hide the incentive payouts via private token transfers as well as hide the voting on disputes, so the voters cannot be discovered and bribed, and noone can find out how they voted.

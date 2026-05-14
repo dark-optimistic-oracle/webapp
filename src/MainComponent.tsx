@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
+import { useWallet } from '@provablehq/aleo-wallet-adaptor-react';
 
 const DOO_PROGRAM_ID = 'dark_optimistic_oracle.aleo';
 
 export default function MainComponent() {
-  const { publicKey, requestTransaction } = useWallet();
+  const { address, connected, executeTransaction: executeWalletTransaction } = useWallet();
   const [activeTab, setActiveTab] = useState<'assert' | 'dispute' | 'vote' | 'collect'>('assert');
 
   // Assertion state
@@ -22,26 +22,20 @@ export default function MainComponent() {
   const [voteRecord, setVoteRecord] = useState('');
 
   const executeTransaction = async (func: string, inputs: any[]) => {
-    if (!publicKey) throw new Error('Wallet not connected');
-    if (!requestTransaction) throw new Error('Wallet does not support requestTransaction');
+    if (!connected || !address) throw new Error('Wallet not connected');
+    if (!executeWalletTransaction) throw new Error('Wallet does not support executing transactions');
 
-    const aleoTransaction = {
-      address: publicKey,
-      chainId: 'localnet', // Targeting local devnet
-      transitions: [
-        {
-          program: DOO_PROGRAM_ID,
-          functionName: func,
-          inputs: inputs,
-        },
-      ],
-      fee: 100_000,
-      feePrivate: false,
+    const transactionOptions = {
+      program: DOO_PROGRAM_ID,
+      function: func,
+      inputs: inputs,
+      fee: 100_000, // Provide appropriate microcredits fee
+      privateFee: false,
     };
 
     try {
-      const txId = await requestTransaction(aleoTransaction);
-      alert(`Transaction Submitted: ${txId}`);
+      const result = await executeWalletTransaction(transactionOptions);
+      alert(`Transaction Submitted. Temp ID: ${result?.transactionId}`);
     } catch (e: any) {
       alert(`Error: ${e.message}`);
     }
@@ -120,8 +114,8 @@ export default function MainComponent() {
               placeholder="Cost (u128)" 
               value={assertCost} onChange={e => setAssertCost(e.target.value)} 
             />
-            <button onClick={handleAssert} disabled={!publicKey}>Submit Assertion</button>
-            {!publicKey && <p style={{color: '#f87171', fontSize: '0.875rem'}}>Connect wallet to submit.</p>}
+            <button onClick={handleAssert} disabled={!connected}>Submit Assertion</button>
+            {!connected && <p style={{color: '#f87171', fontSize: '0.875rem'}}>Connect wallet to submit.</p>}
           </div>
         )}
 
@@ -133,7 +127,7 @@ export default function MainComponent() {
               placeholder="Assertion ID to dispute (e.g. 123)" 
               value={disputeId} onChange={e => setDisputeId(e.target.value)} 
             />
-            <button onClick={handleDispute} disabled={!publicKey}>Submit Dispute</button>
+            <button onClick={handleDispute} disabled={!connected}>Submit Dispute</button>
           </div>
         )}
 
@@ -154,14 +148,14 @@ export default function MainComponent() {
               value={voteRecord} onChange={e => setVoteRecord(e.target.value)} 
             />
             <div className="button-group">
-              <button onClick={() => executeTransaction('confirm', [voteRecord])} disabled={!publicKey}>
+              <button onClick={() => executeTransaction('confirm', [voteRecord])} disabled={!connected}>
                 Confirm (True)
               </button>
               <button 
                 className="button-outline" 
                 style={{borderColor: '#ef4444', color: '#ef4444'}}
                 onClick={() => executeTransaction('deny', [voteRecord])} 
-                disabled={!publicKey}
+                disabled={!connected}
               >
                 Deny (False)
               </button>
@@ -174,10 +168,10 @@ export default function MainComponent() {
             <h3>Collect Rewards or Refunds</h3>
             <p style={{fontSize: '0.875rem', color: '#94a3b8'}}>Collect rewards as Asserter or Disputer.</p>
             <div className="button-group">
-              <button onClick={() => executeTransaction('asserter_collect', [`100000000u128`, `${assertId || '123'}field`])} disabled={!publicKey}>
+              <button onClick={() => executeTransaction('asserter_collect', [`100000000u128`, `${assertId || '123'}field`])} disabled={!connected}>
                 Asserter Collect
               </button>
-              <button onClick={() => executeTransaction('disputer_collect', [`100000000u128`, `${assertId || '123'}field`])} disabled={!publicKey}>
+              <button onClick={() => executeTransaction('disputer_collect', [`100000000u128`, `${assertId || '123'}field`])} disabled={!connected}>
                 Disputer Collect
               </button>
             </div>

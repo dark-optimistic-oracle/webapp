@@ -1,16 +1,17 @@
 import { useMemo } from 'react';
-import { WalletProvider } from '@demox-labs/aleo-wallet-adapter-react';
-import { WalletModalProvider, WalletMultiButton } from '@demox-labs/aleo-wallet-adapter-reactui';
-import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
-import { DecryptPermission, WalletAdapterNetwork } from '@demox-labs/aleo-wallet-adapter-base';
-import '@demox-labs/aleo-wallet-adapter-reactui/styles.css';
+import { AleoWalletProvider } from '@provablehq/aleo-wallet-adaptor-react';
+import { WalletModalProvider, WalletMultiButton } from '@provablehq/aleo-wallet-adaptor-react-ui';
+import { ShieldWalletAdapter } from '@provablehq/aleo-wallet-adaptor-shield';
+import { DecryptPermission } from '@provablehq/aleo-wallet-adaptor-core';
+import { Network } from '@provablehq/aleo-types';
+import '@provablehq/aleo-wallet-adaptor-react-ui/dist/styles.css';
 import './App.css';
 import MainComponent from './MainComponent';
 
 function App() {
   const wallets = useMemo(
     () => [
-      new LeoWalletAdapter({
+      new ShieldWalletAdapter({
         appName: 'Dark Optimistic Oracle',
       }),
     ],
@@ -18,10 +19,10 @@ function App() {
   );
 
   return (
-    <WalletProvider
+    <AleoWalletProvider
       wallets={wallets}
       decryptPermission={DecryptPermission.UponRequest}
-      network={WalletAdapterNetwork.Localnet}
+      network={Network.TESTNET} // Using TESTNET because LOCALNET might not exist in Network enum
       autoConnect
     >
       <WalletModalProvider>
@@ -47,7 +48,7 @@ function App() {
           </footer>
         </div>
       </WalletModalProvider>
-    </WalletProvider>
+    </AleoWalletProvider>
   );
 }
 
