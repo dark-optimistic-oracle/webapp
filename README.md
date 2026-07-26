@@ -1,40 +1,52 @@
-# Dark Optimistic Oracle - Web App
+# Dark Optimistic Oracle Web App
 
 ## Overview
-The Dark Optimistic Oracle is a privacy-preserving oracle similar to UMA, utilizing Zero-Knowledge cryptography on the Aleo blockchain. This front-end application provides a seamless interface for users to interact with the underlying smart contracts, ensuring that incentive payouts and dispute voting remain completely hidden and anonymous.
 
-## Features
-- **Wallet Integration:** Native connection with Aleo Shield and other Aleo-compatible wallets via standard adapters.
-- **Assertions:** Create and submit assertions directly on-chain.
-- **Disputes:** Dispute questionable assertions before their deadline.
-- **Private Voting:** Purchase voting rights, and cast Confirm or Deny votes entirely in private to eliminate bribery.
-- **Reward Collection:** Collect payouts and refunds safely based on dispute outcomes.
+Dark Optimistic Oracle is a privacy-preserving optimistic oracle on Aleo. The product follows the familiar UMA-style lifecycle of assertion, dispute, voting, and settlement, but uses zero-knowledge records so voter identity, ballots, and voter payouts can remain private.
+
+The frontend connects to Shield through the Provable Aleo wallet adapter and submits transactions to `dark_optimistic_oracle.aleo`.
+
+## UI
+
+The `real-ui` interface is an operational oracle console:
+
+- **Proposals:** a queue of assertions moving through challenge windows, disputes, and settlement.
+- **Create:** asserters submit an assertion ID, title field, content hash, assertion cost, voter stake, and deadlines.
+- **Dispute:** disputers challenge an open assertion by posting the matching public DOOR bond.
+- **Private vote:** voters paste a private DOOR payment record, buy a voting right, then submit a private confirm or deny vote.
+- **Settle:** winners collect asserter or disputer awards, voters collect private reward records, and unused voting rights can be refunded.
+
+For development, the form defaults mirror the local demo workflow in `../core/demo/README.md`, including assertion `123field`, a `100_000_000u128` assertion bond, and `1_000_000u128` voter stake.
+
+## Backend Assumptions
+
+The app expects the local Aleo programs from sibling repositories:
+
+- `../core` deploys `dark_optimistic_oracle.aleo`.
+- `../token-registry-workaround` deploys the shortened `token_registry.aleo` used by the demo.
+
+Start and install the local devnet from `../core`:
+
+```bash
+./run_node.sh
+./install.sh
+```
+
+Then connect Shield to the appropriate Aleo environment and use the demo accounts and private records from `../core/demo/README.md`.
 
 ## Getting Started
 
-### Prerequisites
-- Node.js (v18+)
-- `pnpm` package manager
-- Aleo Shield Wallet installed in your browser
-
-### Installation
-1. Navigate to the `webapp` directory:
-   ```bash
-   cd webapp
-   ```
-2. Install dependencies:
-   ```bash
-   pnpm install
-   ```
-
-### Running Locally
-To spin up the development server:
 ```bash
+pnpm install
 pnpm run dev
 ```
 
-### Testing
-We use `vitest` for our testing framework. To run unit tests:
+## Testing
+
 ```bash
 pnpm test
 ```
+
+The unit tests use Vitest and Testing Library. They cover the proposal queue, tab navigation, disconnected wallet behavior, and the transaction payload for assertion submission.
+
+For a production release, add integration tests against a running local devnet and Shield wallet once browser wallet automation is available.

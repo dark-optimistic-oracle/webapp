@@ -1,10 +1,53 @@
 # Development Process
 
-1. **Initialization:** Started by creating a Vite + React application in the `webapp` directory using the `react-ts` template.
-2. **Dependencies:** Added Aleo wallet adapter packages (`@demox-labs/aleo-wallet-adapter-react`, `@demox-labs/aleo-wallet-adapter-reactui`, `@demox-labs/aleo-wallet-adapter-base`) to handle Aleo Shield wallet integration. Also added `lucide-react` for UI icons and `vitest` alongside `@testing-library/react` for unit testing.
-3. **Styling & UI:** 
-   - Overhauled `index.css` and `App.css` to introduce a premium dark theme. 
-   - Leveraged glassmorphism effects for the primary interaction cards, keeping in line with the requested modern aesthetic inspired by `0tru.com` and Aleo's official branding.
-4. **App Integration:** Built the layout in `App.tsx` incorporating the `WalletProvider` to ensure the application could auto-connect with testnet/localnet environments.
-5. **Smart Contract Logic Integration:** Developed `MainComponent.tsx` containing the logic to interact with the Aleo program `dark_optimistic_oracle.aleo`. It encapsulates forms for Assertions, Disputes, Voting Rights, and Rewards collection, triggering transaction requests via the wallet's `requestTransaction` method.
-6. **Testing Setup:** Configured `vitest.config.ts` and `vitest.setup.ts`, creating a test suite (`MainComponent.test.tsx`) to verify the basic functionality of the frontend (tab switching, UI rendering) without requiring a live blockchain node.
+## Initial Work
+
+1. Created a Vite and React application in the `webapp` directory.
+2. Added Aleo wallet adapter packages for Shield wallet integration.
+3. Added `lucide-react` for interface icons and Vitest with Testing Library for unit tests.
+4. Built an initial dark UI with crude action buttons for assertion, dispute, voting, and collection calls.
+
+## Real UI Branch
+
+Created and pushed the `real-ui` branch to `origin/real-ui`.
+
+The requested tag name `v0.0.1 - Crude buttons and calls` could not be created because Git rejects that ref name as invalid. A valid replacement would be `v0.0.1-crude-buttons-and-calls`.
+
+## UMA Reference
+
+Reviewed the current UMA documentation for the optimistic oracle lifecycle. The relevant UX concepts are proposal queues, challenge windows, dispute escalation, wallet confirmation, and settlement after dispute resolution. Dark Optimistic Oracle adapts that flow to Aleo and does not include Ethereum mainnet DVM escalation or cross-chain claims.
+
+## UI Implementation
+
+Rebuilt the frontend around a workflow console:
+
+- A proposal board showing challenge, disputed, and settlement states.
+- A workflow rail for Assert, Dispute, Vote, and Settle.
+- Asserter, disputer, private voter, and settlement forms.
+- Shield wallet connection status and transaction feedback.
+- Demo account and record defaults from `../core/demo/README.md`.
+
+The app still submits through `executeTransaction` from the Provable wallet adapter to `dark_optimistic_oracle.aleo`. Form helpers normalize common Aleo scalar suffixes such as `field`, `u128`, and `u32`.
+
+## Backend Notes
+
+The UI is designed for the local devnet described in `../core/README.md` and `../core/demo/README.md`.
+
+The token registry workaround in `../token-registry-workaround` remains part of the development flow because the demo uses the shortened `token_registry.aleo` program. This workaround is not described as a final-product dependency.
+
+## Tests
+
+Run:
+
+```bash
+pnpm test
+```
+
+Current unit tests cover:
+
+- Rendering the UMA-like proposal queue.
+- Switching to the private voting workflow.
+- Formatting and submitting assertion transaction inputs.
+- Disconnected wallet disabled state.
+
+Remaining integration test gap: a full Shield wallet plus local Aleo devnet transaction run was not automated in this UI pass.
