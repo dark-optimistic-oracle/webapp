@@ -59,7 +59,7 @@ function App() {
           </main>
 
           <footer className="site-footer">
-            Dark Optimistic Oracle local UI for dark_optimistic_oracle.aleo and the demo token registry workaround.
+            Dark Optimistic Oracle local UI for dark_optimistic_oracle.aleo.
           </footer>
         </div>
       </WalletModalProvider>

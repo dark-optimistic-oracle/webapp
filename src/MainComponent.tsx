@@ -216,8 +216,8 @@ export default function MainComponent() {
           <strong>{DOO_PROGRAM_ID}</strong>
         </div>
         <div>
-          <span className="eyebrow">Token registry</span>
-          <strong>token_registry.aleo workaround</strong>
+          <span className="eyebrow">Asset</span>
+          <strong>DOOR private and public records</strong>
         </div>
         <div>
           <span className="eyebrow">Wallet</span>

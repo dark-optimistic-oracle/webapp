@@ -20,10 +20,9 @@ For development, the form defaults mirror the local demo workflow in `../core/de
 
 ## Backend Assumptions
 
-The app expects the local Aleo programs from sibling repositories:
+The app expects the local Aleo oracle program from the sibling repository:
 
 - `../core` deploys `dark_optimistic_oracle.aleo`.
-- `../token-registry-workaround` deploys the shortened `token_registry.aleo` used by the demo.
 
 Start and install the local devnet from `../core`:
 

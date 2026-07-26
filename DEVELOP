@@ -33,8 +33,6 @@ The app still submits through `executeTransaction` from the Provable wallet adap
 
 The UI is designed for the local devnet described in `../core/README.md` and `../core/demo/README.md`.
 
-The token registry workaround in `../token-registry-workaround` remains part of the development flow because the demo uses the shortened `token_registry.aleo` program. This workaround is not described as a final-product dependency.
-
 ## Tests
 
 Run:
