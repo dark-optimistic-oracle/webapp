@@ -7,25 +7,19 @@
 3. Added `lucide-react` for interface icons and Vitest with Testing Library for unit tests.
 4. Built an initial dark UI with crude action buttons for assertion, dispute, voting, and collection calls.
 
-## Real UI Branch
+## Protocol Model
 
-Created and pushed the `real-ui` branch to `origin/real-ui`.
-
-The requested tag name `v0.0.1 - Crude buttons and calls` could not be created because Git rejects that ref name as invalid. A valid replacement would be `v0.0.1-crude-buttons-and-calls`.
-
-## UMA Reference
-
-Reviewed the current UMA documentation for the optimistic oracle lifecycle. The relevant UX concepts are proposal queues, challenge windows, dispute escalation, wallet confirmation, and settlement after dispute resolution. Dark Optimistic Oracle adapts that flow to Aleo and does not include Ethereum mainnet DVM escalation or cross-chain claims.
+The interface follows the program's assertion, dispute, private-record voting, and settlement lifecycle. Governance, bridges, and foreign-chain contracts remain future integration stages and are not presented as current functionality.
 
 ## UI Implementation
 
 Rebuilt the frontend around a workflow console:
 
-- A proposal board showing challenge, disputed, and settlement states.
+- An on-chain assertion lookup showing public terms, participants, and aggregate vote totals.
 - A workflow rail for Assert, Dispute, Vote, and Settle.
 - Asserter, disputer, private voter, and settlement forms.
 - Shield wallet connection status and transaction feedback.
-- Demo account and record defaults from `../core/demo/README.md`.
+- Development-only account and record defaults from `../core/demo/README.md`.
 
 The app still submits through `executeTransaction` from the Provable wallet adapter to `dark_optimistic_oracle.aleo`. Form helpers normalize common Aleo scalar suffixes such as `field`, `u128`, and `u32`.
 
@@ -81,10 +75,14 @@ pnpm test
 
 Current unit tests cover:
 
-- Rendering the UMA-like proposal queue.
+- Rendering the public assertion lookup.
 - Switching to the private voting workflow.
 - Formatting and submitting assertion transaction inputs.
 - Disconnected wallet disabled state.
 - Current deployed ABI names and structured assertion input formatting.
 
 Remaining integration test gap: a full Shield wallet plus local Aleo devnet transaction run was not automated in this UI pass.
+
+The public assertion lookup reads the `assertions`, `asserters`, `disputers`,
+`confirm_votes`, and `deny_votes` mappings for a known assertion ID. It does not
+attempt to enumerate mappings or expose private voting records.

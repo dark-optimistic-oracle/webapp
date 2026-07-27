@@ -24,13 +24,47 @@ describe('MainComponent', () => {
     };
   });
 
-  it('renders the UMA-like proposal queue by default', () => {
+  it('renders the on-chain assertion lookup by default', () => {
     render(<MainComponent />);
 
     expect(screen.getByRole('tab', { name: /proposals/i })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByText('Assertions moving through dispute resolution')).toBeInTheDocument();
-    expect(screen.getByText('BTC-USD closed above 100,000 on the reference exchange')).toBeInTheDocument();
-    expect(screen.getByText('Votes and voter rewards are private Aleo records')).toBeInTheDocument();
+    expect(screen.getByText('Inspect an on-chain assertion')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /load assertion/i })).toBeEnabled();
+    expect(screen.getByText(/voting rights, vote receipts, and voter awards are private records/i)).toBeInTheDocument();
+  });
+
+  it('loads public assertion state and aggregate vote totals', async () => {
+    const values: Record<string, string | null> = {
+      assertions: '{ id: 123field, cost: 100_000_000u128 }',
+      asserters: 'aleo1asserter',
+      disputers: null,
+      confirm_votes: '3u64',
+      deny_votes: '2u64',
+    };
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | URL | Request) => {
+        const url = String(input);
+        const mappingName = Object.keys(values).find((name) => url.includes(`/mapping/${name}/`));
+        const value = mappingName ? values[mappingName] : null;
+
+        return {
+          ok: value !== null,
+          status: value === null ? 404 : 200,
+          json: async () => value,
+        } as Response;
+      })
+    );
+
+    render(<MainComponent />);
+    fireEvent.click(screen.getByRole('button', { name: /load assertion/i }));
+
+    expect(await screen.findByText('{ id: 123field, cost: 100_000_000u128 }')).toBeInTheDocument();
+    expect(screen.getByText('aleo1asserter')).toBeInTheDocument();
+    expect(screen.getByText('Not disputed')).toBeInTheDocument();
+    expect(screen.getByText('3u64')).toBeInTheDocument();
+    expect(screen.getByText('2u64')).toBeInTheDocument();
   });
 
   it('switches to the private voting workflow', () => {

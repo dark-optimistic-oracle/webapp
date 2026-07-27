@@ -218,6 +218,68 @@ code {
   margin: 0;
 }
 
+.section-heading p,
+.lookup-guidance {
+  color: var(--muted);
+  margin: 8px 0 0;
+  max-width: 800px;
+}
+
+.lookup-form {
+  align-items: end;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.assertion-snapshot {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.snapshot-card {
+  background: #0b1018;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-width: 0;
+  padding: 16px;
+}
+
+.snapshot-card.snapshot-terms {
+  grid-column: 1 / -1;
+}
+
+.snapshot-card > code {
+  display: block;
+  margin-top: 10px;
+  white-space: pre-wrap;
+}
+
+.snapshot-card dl {
+  display: grid;
+  gap: 12px;
+  margin: 10px 0 0;
+}
+
+.snapshot-card dl > div {
+  display: grid;
+  gap: 4px;
+}
+
+.snapshot-card dt {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.snapshot-card dd {
+  color: var(--text);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .proposal-list {
   display: grid;
   gap: 10px;
@@ -282,6 +344,12 @@ label {
   gap: 7px;
 }
 
+.field-help {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 500;
+}
+
 .primary-action,
 .secondary-action,
 .danger-action {
@@ -340,8 +408,14 @@ label {
   }
 
   .proposal-row,
-  .form-grid {
+  .form-grid,
+  .lookup-form,
+  .assertion-snapshot {
     grid-template-columns: 1fr;
+  }
+
+  .snapshot-card.snapshot-terms {
+    grid-column: auto;
   }
 }
 

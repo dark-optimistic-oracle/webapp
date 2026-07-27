@@ -34,7 +34,7 @@ const sampleVotingRightRecord =
 const sampleVotingReceiptRecord =
   '{ owner: aleo1azkl6rf3x5t3qk48rfsprxdkx6m7e33un9qpq0aqu036rzpm9qyq596vzw.private, assertion_id: 123field.private, outcome: true.private, _nonce: 8401380187321425398524037599072863595607808281814913320810389875998654131179group.public, _version: 1u8.public }';
 
-const testAccounts = [
+const localDemoAccounts = [
   {
     role: 'Asserter',
     address: 'aleo1qk0xj2xcnx5n6f2d7wqjylf7ryda4gzypfcfh2mhqtynhz67x5xsswvcca',
@@ -49,37 +49,24 @@ const testAccounts = [
   },
 ];
 
-const proposalRows = [
-  {
-    id: '123field',
-    title: 'BTC-USD closed above 100,000 on the reference exchange',
-    status: 'Disputed',
-    bond: '100 DOOR',
-    deadline: 'Voting closes at mock block 20000',
-    privacy: 'Votes and voter rewards are private Aleo records',
-  },
-  {
-    id: '884field',
-    title: 'Protocol fee report matches the published treasury hash',
-    status: 'Challenge window',
-    bond: '80 DOOR',
-    deadline: 'Dispute by block 18000',
-    privacy: 'Assertion and dispute bonds settle publicly',
-  },
-  {
-    id: '511field',
-    title: 'Bridge incident report contains no unresolved critical claims',
-    status: 'Ready to settle',
-    bond: '120 DOOR',
-    deadline: 'Collect as winner or refund unused voting right',
-    privacy: 'Winning voter receipts collect private token records',
-  },
-];
-
 type TxNotice = {
   type: 'success' | 'error';
   message: string;
 };
+
+type AssertionSnapshot = {
+  assertion: string;
+  asserter: string;
+  disputer: string | null;
+  confirmVotes: string;
+  denyVotes: string;
+};
+
+type LookupState =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'loaded'; value: AssertionSnapshot }
+  | { status: 'error'; message: string };
 
 type View = 'proposals' | 'create' | 'dispute' | 'vote' | 'settle';
 
@@ -97,6 +84,20 @@ const toU128 = (value: string) => {
 const toU32 = (value: string) => {
   const trimmed = value.trim();
   return trimmed.endsWith('u32') ? trimmed : `${trimmed}u32`;
+};
+
+const readProgramMapping = async (mappingName: string, key: string) => {
+  const response = await fetch(
+    `${TESTNET_API_URL}/testnet/program/${DOO_PROGRAM_ID}/mapping/${mappingName}/${encodeURIComponent(key)}`
+  );
+
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    throw new Error(`Unable to read ${mappingName} (${response.status}).`);
+  }
+
+  const value: unknown = await response.json();
+  return typeof value === 'string' ? value : JSON.stringify(value);
 };
 
 export default function MainComponent() {
@@ -118,6 +119,8 @@ export default function MainComponent() {
   const [awardAmount, setAwardAmount] = useState(DEFAULT_AWARD);
   const [txNotice, setTxNotice] = useState<TxNotice | null>(null);
   const [programAvailable, setProgramAvailable] = useState(import.meta.env.DEV);
+  const [lookupId, setLookupId] = useState(DEFAULT_ASSERTION_ID);
+  const [lookupState, setLookupState] = useState<LookupState>({ status: 'idle' });
 
   useEffect(() => {
     const computeHash = async () => {
@@ -175,11 +178,50 @@ export default function MainComponent() {
     () => [
       { label: 'Assert', detail: 'Post a claim and public DOOR bond', icon: FileText },
       { label: 'Dispute', detail: 'Challenge before the liveness window closes', icon: Gavel },
-      { label: 'Vote', detail: 'Buy a private right and vote without revealing identity', icon: Vote },
-      { label: 'Settle', detail: 'Collect public awards or private voter records', icon: CircleDollarSign },
+      { label: 'Vote', detail: 'Use private records while aggregate tallies remain public', icon: Vote },
+      { label: 'Settle', detail: 'Collect public role awards or private voter awards', icon: CircleDollarSign },
     ],
     []
   );
+
+  const loadAssertion = async () => {
+    const assertionId = toField(lookupId);
+    setLookupState({ status: 'loading' });
+
+    try {
+      const [assertion, asserter, disputer, confirmVotes, denyVotes] = await Promise.all([
+        readProgramMapping('assertions', assertionId),
+        readProgramMapping('asserters', assertionId),
+        readProgramMapping('disputers', assertionId),
+        readProgramMapping('confirm_votes', assertionId),
+        readProgramMapping('deny_votes', assertionId),
+      ]);
+
+      if (!assertion || !asserter) {
+        setLookupState({
+          status: 'error',
+          message: `No on-chain assertion was found for ${assertionId}.`,
+        });
+        return;
+      }
+
+      setLookupState({
+        status: 'loaded',
+        value: {
+          assertion,
+          asserter,
+          disputer,
+          confirmVotes: confirmVotes ?? '0u64',
+          denyVotes: denyVotes ?? '0u64',
+        },
+      });
+    } catch (error) {
+      setLookupState({
+        status: 'error',
+        message: error instanceof Error ? error.message : 'Unable to load the assertion from Aleo testnet.',
+      });
+    }
+  };
 
   const executeTransaction = async (func: string, inputs: string[]) => {
     if (!connected || !address) {
@@ -314,25 +356,77 @@ export default function MainComponent() {
       {activeView === 'proposals' && (
         <div className="proposal-board">
           <div className="section-heading">
-            <span className="eyebrow">UMA-like queue</span>
-            <h2>Assertions moving through dispute resolution</h2>
+            <span className="eyebrow">Public protocol state</span>
+            <h2>Inspect an on-chain assertion</h2>
+            <p>
+              Assertion IDs are not enumerable from Aleo mappings. Enter a known ID to load its
+              public terms, participants, and aggregate vote totals.
+            </p>
           </div>
-          <div className="proposal-list">
-            {proposalRows.map((proposal) => (
-              <article className="proposal-row" key={proposal.id}>
-                <div>
-                  <span className="proposal-id">{proposal.id}</span>
-                  <h3>{proposal.title}</h3>
-                  <p>{proposal.privacy}</p>
-                </div>
-                <div className="proposal-meta">
-                  <span className="status-pill">{proposal.status}</span>
-                  <span>{proposal.bond}</span>
-                  <span>{proposal.deadline}</span>
-                </div>
+          <form className="lookup-form" onSubmit={(event) => event.preventDefault()}>
+            <label>
+              Assertion ID
+              <input value={lookupId} onChange={(event) => setLookupId(event.target.value)} />
+            </label>
+            <button
+              className="secondary-action"
+              disabled={!programAvailable || lookupState.status === 'loading'}
+              onClick={loadAssertion}
+              type="button"
+            >
+              <RadioTower aria-hidden="true" size={18} />
+              {lookupState.status === 'loading' ? 'Loading…' : 'Load assertion'}
+            </button>
+          </form>
+
+          {lookupState.status === 'idle' && (
+            <p className="lookup-guidance">
+              Public state is read from <code>{DOO_PROGRAM_ID}</code>. Voting rights, vote receipts,
+              and voter awards are private records and are not exposed by this lookup.
+            </p>
+          )}
+
+          {lookupState.status === 'error' && (
+            <div className="tx-notice error" role="alert">
+              <AlertTriangle aria-hidden="true" size={18} />
+              <span>{lookupState.message}</span>
+            </div>
+          )}
+
+          {lookupState.status === 'loaded' && (
+            <div className="assertion-snapshot" aria-live="polite">
+              <article className="snapshot-card snapshot-terms">
+                <span className="eyebrow">Assertion terms</span>
+                <code>{lookupState.value.assertion}</code>
               </article>
-            ))}
-          </div>
+              <article className="snapshot-card">
+                <span className="eyebrow">Participants</span>
+                <dl>
+                  <div>
+                    <dt>Asserter</dt>
+                    <dd><code>{lookupState.value.asserter}</code></dd>
+                  </div>
+                  <div>
+                    <dt>Disputer</dt>
+                    <dd><code>{lookupState.value.disputer ?? 'Not disputed'}</code></dd>
+                  </div>
+                </dl>
+              </article>
+              <article className="snapshot-card">
+                <span className="eyebrow">Public aggregate tally</span>
+                <dl>
+                  <div>
+                    <dt>Confirm</dt>
+                    <dd>{lookupState.value.confirmVotes}</dd>
+                  </div>
+                  <div>
+                    <dt>Deny</dt>
+                    <dd>{lookupState.value.denyVotes}</dd>
+                  </div>
+                </dl>
+              </article>
+            </div>
+          )}
         </div>
       )}
 
@@ -371,6 +465,9 @@ export default function MainComponent() {
           <label>
             Claim text
             <textarea rows={4} value={assertRawContent} onChange={(event) => setAssertRawContent(event.target.value)} />
+            <span className="field-help">
+              Hashed locally in this browser. Only the resulting field is submitted on-chain.
+            </span>
           </label>
           <label>
             Content hash field
@@ -499,14 +596,16 @@ export default function MainComponent() {
         </form>
       )}
 
-      <aside className="account-strip" aria-label="Demo accounts">
-        {testAccounts.map((account) => (
-          <div key={account.role}>
-            <span>{account.role}</span>
-            <code>{account.address}</code>
-          </div>
-        ))}
-      </aside>
+      {import.meta.env.DEV && (
+        <aside className="account-strip" aria-label="Local demo accounts">
+          {localDemoAccounts.map((account) => (
+            <div key={account.role}>
+              <span>{account.role}</span>
+              <code>{account.address}</code>
+            </div>
+          ))}
+        </aside>
+      )}
     </section>
   );
 }

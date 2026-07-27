@@ -38,16 +38,17 @@ function App() {
           <main className="app-main">
             <section className="intro-band" aria-label="Product overview">
               <div className="intro-copy">
-                <span className="eyebrow">Private dispute arbitration on Aleo</span>
-                <h1>Assert truth, dispute bad data, keep voters hidden.</h1>
+                <span className="eyebrow">Privacy-preserving oracle on Aleo</span>
+                <h1>Assert off-chain facts, challenge them, resolve disputes privately.</h1>
                 <p>
-                  A zero-knowledge optimistic oracle inspired by UMA's assert-and-dispute flow,
-                  with Aleo private records for voting rights, ballots, and voter rewards.
+                  An economically secured optimistic oracle with public assertion state and
+                  aggregate tallies, plus private Aleo records for voting rights, vote receipts,
+                  and voter awards.
                 </p>
                 <div className="privacy-metrics" aria-label="Privacy properties">
-                  <span>Private token transfers</span>
-                  <span>Hidden voter identity</span>
-                  <span>Shield wallet execution</span>
+                  <span>Public assertion lifecycle</span>
+                  <span>Private voting records</span>
+                  <span>Zero-knowledge execution</span>
                 </div>
               </div>
               <div className="hero-art" aria-hidden="true">
