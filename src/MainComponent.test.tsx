@@ -123,8 +123,19 @@ describe('MainComponent', () => {
     await waitFor(() =>
       expect(executeTransactionMock).toHaveBeenLastCalledWith(
         expect.objectContaining({
-          function: 'collect_assertion_cost',
-          inputs: ['100_000_000u128', '123field'],
+          function: 'collect_assertion_award',
+          inputs: ['123field', '90_000_000u128'],
+        })
+      )
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /disputer collect/i }));
+
+    await waitFor(() =>
+      expect(executeTransactionMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          function: 'collect_dispute_award',
+          inputs: ['123field', '190_000_000u128'],
         })
       )
     );

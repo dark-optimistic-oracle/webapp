@@ -1,88 +1,91 @@
 # Development Process
 
-## Initial Work
+Last updated: 2026-07-27
+
+## Current status
+
+The Vite/React client builds successfully, its six component tests pass, and it
+targets Aleo Testnet through `https://api.explorer.provable.com/v2`. It uses the
+Shield wallet adapter and the current `dark_optimistic_oracle.aleo` ABI.
+
+The public oracle is not deployed yet. The shared replacement Testnet
+administrator is
+`aleo1a2k4a9phy4kklx2ad0aed0lgvyzaegf0gfp85uldzhjzn8tt05zsjmfjnf`.
+Transactions remain disabled when the API cannot verify the program.
+
+## Initial work
 
 1. Created a Vite and React application in the `webapp` directory.
 2. Added Aleo wallet adapter packages for Shield wallet integration.
-3. Added `lucide-react` for interface icons and Vitest with Testing Library for unit tests.
-4. Built an initial dark UI with crude action buttons for assertion, dispute, voting, and collection calls.
+3. Added `lucide-react`, Vitest, and Testing Library.
+4. Built the assertion, dispute, private-voting, and settlement console.
 
-## Protocol Model
+## Protocol model
 
-The interface follows the program's assertion, dispute, private-record voting, and settlement lifecycle. Governance, bridges, and foreign-chain contracts remain future integration stages and are not presented as current functionality.
+The interface follows the program's assertion, dispute, private-record voting,
+and settlement lifecycle. Governance, bridges, and foreign-chain contracts
+remain future integration stages and are not presented as current
+functionality.
 
-## UI Implementation
+## UI implementation
 
-Rebuilt the frontend around a workflow console:
+The workflow console contains:
 
-- An on-chain assertion lookup showing public terms, participants, and aggregate vote totals.
+- An on-chain assertion lookup showing public terms, participants, and
+  aggregate vote totals.
 - A workflow rail for Assert, Dispute, Vote, and Settle.
 - Asserter, disputer, private voter, and settlement forms.
 - Shield wallet connection status and transaction feedback.
 - Development-only account and record defaults from `../core/demo/README.md`.
 
-The app still submits through `executeTransaction` from the Provable wallet adapter to `dark_optimistic_oracle.aleo`. Form helpers normalize common Aleo scalar suffixes such as `field`, `u128`, and `u32`.
+The app submits through `executeTransaction` from the Provable wallet adapter
+to `dark_optimistic_oracle.aleo`. Form helpers normalize common Aleo scalar
+suffixes such as `field`, `u128`, and `u32`.
 
-## Backend Notes
+The settlement forms call `collect_assertion_award` and
+`collect_dispute_award` with `(assertion_id, payout_amount)`, matching the
+current contract. Payouts are entered explicitly and verified by the Aleo
+program before minting.
 
-The UI is designed for the local devnet described in `../core/README.md` and `../core/demo/README.md`.
+## Network and credential boundary
 
-The hosted build targets Aleo testnet. Contract deployment and live-network discoveries are documented in `../core/README.md`.
+The hosted build targets Testnet. The official API confirms that canonical
+`token_registry.aleo` exists, so the local workaround is excluded from public
+deployment. The application never receives an operator private key; transaction
+authorization remains in the connected wallet.
 
-The official testnet API confirms that canonical `token_registry.aleo` exists.
-The local workaround is therefore excluded from public deployment. The oracle
-was not present during this pass, and its Leo 4.3.4 deployment fee was estimated
-at `21.609156` credits while the configured deployer held `10.049749`; no
-underfunded transaction was broadcast.
+The generic development credentials were retained under `DEVNET_*` names. A
+separate shared `TESTNET_PRIVATE_KEY` is stored only in ignored, mode-`600`
+`.env.private` files in `core` and `predmkt`. All real `.env*` files are
+ignored; only sanitized `*.example` templates may be tracked.
 
-The configured deployer/admin is also Leo's publicly documented local-devnet
-account. It is not safe for an upgradable public deployment regardless of its
-balance. The testnet script now refuses that account; a new secure admin address
-and matching funded key are required.
-
-The core program was migrated to current Leo syntax while preserving its
-admin-only upgrade constructor. Record arguments now rely on their intrinsic
-private visibility, and cross-program finalizers follow checks-effects-
-interactions ordering. `../core/deploy_testnet.sh` provides a canonical-registry
-deploy/upgrade path once the deployer is funded.
+`../core/deploy_testnet.sh` owns an oracle-only deploy/upgrade path. The complete
+oracle-plus-market deployment is owned by `../predmkt/deploy_testnet.sh`.
 
 ## GitHub Pages
 
-Added `.github/workflows/deploy-pages.yml` to continuously deploy the production app from `main`.
+`.github/workflows/deploy-pages.yml` deploys the production app from `main`.
+The workflow installs locked dependencies, lints, tests, builds with
+`VITE_BASE_PATH=/webapp/`, uploads `dist`, and deploys through the
+`github-pages` environment. Jekyll is not used.
 
-The workflow:
+Local development retains the `/` base path. The favicon uses Vite's
+`%BASE_URL%` replacement so it also resolves under the GitHub Pages repository
+path.
 
-1. Installs the locked pnpm dependencies on Node.js 22.
-2. Runs ESLint and the Vitest suite.
-3. Builds with `VITE_BASE_PATH=/webapp/`.
-4. Uploads `dist` as a GitHub Pages artifact.
-5. Deploys through the protected `github-pages` environment.
-
-Local development and builds retain the `/` base path because `VITE_BASE_PATH` is only set by the deployment workflow.
-
-The favicon also uses Vite's `%BASE_URL%` replacement so it resolves beneath the
-GitHub Pages repository path. The production UI verifies the oracle program and
-loads future assertion deadlines from the official testnet height endpoint
-before enabling transactions.
-
-## Tests
-
-Run:
+## Validation
 
 ```bash
-pnpm test
+pnpm run lint
+pnpm exec vitest --run
+pnpm run build
 ```
 
-Current unit tests cover:
+The component suite covers public assertion lookup, private-vote navigation,
+Aleo input formatting, current dispute and settlement ABI calls, and the
+disconnected-wallet state. Vitest discovery is restricted to `src/**/*.test.*`
+so ignored review/build artifacts under `temp/` cannot be mistaken for webapp
+tests.
 
-- Rendering the public assertion lookup.
-- Switching to the private voting workflow.
-- Formatting and submitting assertion transaction inputs.
-- Disconnected wallet disabled state.
-- Current deployed ABI names and structured assertion input formatting.
-
-Remaining integration test gap: a full Shield wallet plus local Aleo devnet transaction run was not automated in this UI pass.
-
-The public assertion lookup reads the `assertions`, `asserters`, `disputers`,
-`confirm_votes`, and `deny_votes` mappings for a known assertion ID. It does not
-attempt to enumerate mappings or expose private voting records.
+The wallet boundary is mocked in unit tests. A real browser-wallet approval
+remains a manual Testnet check after deployment.

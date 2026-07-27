@@ -20,8 +20,10 @@ const DEFAULT_VOTER_STAKE = '1_000_000';
 const DEFAULT_DISPUTE_DEADLINE = '10000';
 const DEFAULT_VOTING_DEADLINE = '20000';
 const DEFAULT_AWARD = '1_010_000';
+const DEFAULT_ASSERTER_PAYOUT = '90_000_000';
+const DEFAULT_DISPUTER_PAYOUT = '190_000_000';
 const DEFAULT_TRANSACTION_FEE = 1_000_000;
-const TESTNET_API_URL = import.meta.env.VITE_ALEO_API_URL ?? 'https://api.explorer.provable.com/v1';
+const TESTNET_API_URL = import.meta.env.VITE_ALEO_API_URL ?? 'https://api.explorer.provable.com/v2';
 
 const samplePrivatePaymentRecord =
   '{ owner: aleo1azkl6rf3x5t3qk48rfsprxdkx6m7e33un9qpq0aqu036rzpm9qyq596vzw.private, amount: 1000000u128.private, token_id: 346688784394585735039324415800163929700021701423791533632764818774905958305field.private, external_authorization_required: false.private, authorized_until: 4294967295u32.private, _nonce: 7217685150051585053344308293369013275054479635381924146506947736298899083074group.public, _version: 1u8.public }';
@@ -115,6 +117,8 @@ export default function MainComponent() {
   const [votingRightRecord, setVotingRightRecord] = useState(import.meta.env.DEV ? sampleVotingRightRecord : '');
   const [votingReceiptRecord, setVotingReceiptRecord] = useState(import.meta.env.DEV ? sampleVotingReceiptRecord : '');
   const [awardAmount, setAwardAmount] = useState(DEFAULT_AWARD);
+  const [asserterPayout, setAsserterPayout] = useState(DEFAULT_ASSERTER_PAYOUT);
+  const [disputerPayout, setDisputerPayout] = useState(DEFAULT_DISPUTER_PAYOUT);
   const [txNotice, setTxNotice] = useState<TxNotice | null>(null);
   const [programAvailable, setProgramAvailable] = useState(import.meta.env.DEV);
   const [lookupId, setLookupId] = useState(DEFAULT_ASSERTION_ID);
@@ -144,7 +148,7 @@ export default function MainComponent() {
 
     const loadTestnetState = async () => {
       const [heightResponse, programResponse] = await Promise.all([
-        fetch(`${TESTNET_API_URL}/testnet/latest/height`),
+        fetch(`${TESTNET_API_URL}/testnet/block/height/latest`),
         fetch(`${TESTNET_API_URL}/testnet/program/${DOO_PROGRAM_ID}`),
       ]);
 
@@ -265,7 +269,7 @@ export default function MainComponent() {
     executeTransaction(supportsAssertion ? 'confirm' : 'deny', [votingRightRecord]);
 
   const collectForRole = (
-    role: 'collect_assertion_cost' | 'collect_dispute_award' | 'collect_voting_award' | 'refund_voting_right'
+    role: 'collect_assertion_award' | 'collect_dispute_award' | 'collect_voting_award' | 'refund_voting_right'
   ) => {
     if (role === 'collect_voting_award') {
       executeTransaction(role, [toU128(awardAmount), votingReceiptRecord]);
@@ -277,7 +281,12 @@ export default function MainComponent() {
       return;
     }
 
-    executeTransaction(role, [toU128(assertCost), toField(disputeId)]);
+    if (role === 'collect_assertion_award') {
+      executeTransaction(role, [toField(disputeId), toU128(asserterPayout)]);
+      return;
+    }
+
+    executeTransaction(role, [toField(disputeId), toU128(disputerPayout)]);
   };
 
   return (
@@ -419,8 +428,12 @@ export default function MainComponent() {
               <input value={assertTitle} onChange={(event) => setAssertTitle(event.target.value)} />
             </label>
             <label>
-              Assertion cost
-              <input value={assertCost} onChange={(event) => setAssertCost(event.target.value)} />
+              Asserter payout amount
+              <input value={asserterPayout} onChange={(event) => setAsserterPayout(event.target.value)} />
+            </label>
+            <label>
+              Disputer payout amount
+              <input value={disputerPayout} onChange={(event) => setDisputerPayout(event.target.value)} />
             </label>
             <label>
               Voter stake
@@ -553,7 +566,7 @@ export default function MainComponent() {
             <textarea rows={3} value={votingRightRecord} onChange={(event) => setVotingRightRecord(event.target.value)} />
           </label>
           <div className="settlement-grid">
-            <button className="primary-action" disabled={!connected || !programAvailable} onClick={() => collectForRole('collect_assertion_cost')} type="button">
+            <button className="primary-action" disabled={!connected || !programAvailable} onClick={() => collectForRole('collect_assertion_award')} type="button">
               Asserter collect
             </button>
             <button className="secondary-action" disabled={!connected || !programAvailable} onClick={() => collectForRole('collect_dispute_award')} type="button">
