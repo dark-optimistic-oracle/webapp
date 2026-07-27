@@ -23,7 +23,11 @@ const DEFAULT_AWARD = '1_010_000';
 const DEFAULT_ASSERTER_PAYOUT = '90_000_000';
 const DEFAULT_DISPUTER_PAYOUT = '190_000_000';
 const DEFAULT_TRANSACTION_FEE = 1_000_000;
-const TESTNET_API_URL = import.meta.env.VITE_ALEO_API_URL ?? 'https://api.explorer.provable.com/v2';
+const TESTNET_API_URL = import.meta.env.VITE_ALEO_API_URL ?? 'https://api.provable.com/v2';
+const OFFICIAL_TESTNET_APIS = [
+  'https://api.provable.com/v2',
+  'https://api.explorer.provable.com/v2',
+];
 
 const samplePrivatePaymentRecord =
   '{ owner: aleo1azkl6rf3x5t3qk48rfsprxdkx6m7e33un9qpq0aqu036rzpm9qyq596vzw.private, amount: 1000000u128.private, token_id: 346688784394585735039324415800163929700021701423791533632764818774905958305field.private, external_authorization_required: false.private, authorized_until: 4294967295u32.private, _nonce: 7217685150051585053344308293369013275054479635381924146506947736298899083074group.public, _version: 1u8.public }';
@@ -86,9 +90,31 @@ const toU32 = (value: string) => {
   return trimmed.endsWith('u32') ? trimmed : `${trimmed}u32`;
 };
 
+const fetchTestnet = async (path: string) => {
+  const endpoints = OFFICIAL_TESTNET_APIS.includes(TESTNET_API_URL)
+    ? [
+        TESTNET_API_URL,
+        ...OFFICIAL_TESTNET_APIS.filter((endpoint) => endpoint !== TESTNET_API_URL),
+      ]
+    : [TESTNET_API_URL];
+  let lastResponse: Response | null = null;
+  let lastError: unknown;
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(`${endpoint}${path}`);
+      if (response.ok) return response;
+      lastResponse = response;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  if (lastResponse) return lastResponse;
+  throw lastError instanceof Error ? lastError : new Error('Aleo Testnet is not responding.');
+};
+
 const readProgramMapping = async (mappingName: string, key: string) => {
-  const response = await fetch(
-    `${TESTNET_API_URL}/testnet/program/${DOO_PROGRAM_ID}/mapping/${mappingName}/${encodeURIComponent(key)}`
+  const response = await fetchTestnet(
+    `/testnet/program/${DOO_PROGRAM_ID}/mapping/${mappingName}/${encodeURIComponent(key)}`
   );
 
   if (response.status === 404) return null;
@@ -148,8 +174,8 @@ export default function MainComponent() {
 
     const loadTestnetState = async () => {
       const [heightResponse, programResponse] = await Promise.all([
-        fetch(`${TESTNET_API_URL}/testnet/block/height/latest`),
-        fetch(`${TESTNET_API_URL}/testnet/program/${DOO_PROGRAM_ID}`),
+        fetchTestnet('/testnet/block/height/latest'),
+        fetchTestnet(`/testnet/program/${DOO_PROGRAM_ID}`),
       ]);
 
       if (!heightResponse.ok) throw new Error(`Unable to read testnet height (${heightResponse.status}).`);

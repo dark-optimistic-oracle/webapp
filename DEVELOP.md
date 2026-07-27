@@ -5,13 +5,14 @@ Last updated: 2026-07-27
 ## Current status
 
 The Vite/React client builds successfully, its six component tests pass, and it
-targets Aleo Testnet through `https://api.explorer.provable.com/v2`. It uses the
+targets Aleo Testnet through `https://api.provable.com/v2`. It uses the
 Shield wallet adapter and the current `dark_optimistic_oracle.aleo` ABI.
 
-The public oracle is not deployed yet. The shared replacement Testnet
-administrator is
+The public oracle is deployed and initialized at edition `0`. The shared
+Testnet administrator and fee collector is
 `aleo1a2k4a9phy4kklx2ad0aed0lgvyzaegf0gfp85uldzhjzn8tt05zsjmfjnf`.
-Transactions remain disabled when the API cannot verify the program.
+Transactions remain disabled when neither official API provider can verify the
+program.
 
 ## Initial work
 
@@ -54,6 +55,11 @@ The hosted build targets Testnet. The official API confirms that canonical
 deployment. The application never receives an operator private key; transaction
 authorization remains in the connected wallet.
 
+The primary API is `https://api.provable.com/v2`. Read-only program, mapping,
+and height requests fall back to `https://api.explorer.provable.com/v2` when an
+official provider is temporarily behind the other. Custom or local endpoints
+are never silently redirected.
+
 The generic development credentials were retained under `DEVNET_*` names. A
 separate shared `TESTNET_PRIVATE_KEY` is stored only in ignored, mode-`600`
 `.env.private` files in `core` and `predmkt`. All real `.env*` files are
@@ -89,3 +95,8 @@ tests.
 
 The wallet boundary is mocked in unit tests. A real browser-wallet approval
 remains a manual Testnet check after deployment.
+
+The production build was also exercised in a browser against the deployed
+Testnet oracle. The console, assertion lookup, and workflow tabs rendered
+without browser warnings or errors. Signing was intentionally not attempted
+because that requires an interactive Shield wallet approval.
