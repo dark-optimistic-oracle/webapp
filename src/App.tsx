@@ -6,7 +6,6 @@ import { DecryptPermission } from '@provablehq/aleo-wallet-adaptor-core';
 import { Network } from '@provablehq/aleo-types';
 import { ShieldCheck } from 'lucide-react';
 import '@provablehq/aleo-wallet-adaptor-react-ui/dist/styles.css';
-import heroArt from './assets/hero.png';
 import './App.css';
 import MainComponent from './MainComponent';
 
@@ -26,41 +25,41 @@ function App() {
       <WalletModalProvider>
         <div className="app-shell">
           <header className="site-header">
-            <div className="brand-mark" aria-label="Dark Optimistic Oracle">
+            <a className="brand-mark" href="https://dark-optimistic-oracle.github.io/website/" aria-label="Dark Optimistic Oracle website">
               <span className="brand-icon">
                 <ShieldCheck aria-hidden="true" size={19} />
               </span>
               Dark Optimistic Oracle
+            </a>
+            <div className="header-actions">
+              <nav aria-label="Project navigation">
+                <a href="https://dark-optimistic-oracle.github.io/website/">Website</a>
+                <a aria-current="page" href="./">App</a>
+                <a href="https://dark-optimistic-oracle.github.io/webdocs/">Docs</a>
+              </nav>
+              <WalletMultiButton />
             </div>
-            <WalletMultiButton />
           </header>
 
           <main className="app-main">
-            <section className="intro-band" aria-label="Product overview">
-              <div className="intro-copy">
-                <span className="eyebrow">Privacy-preserving oracle on Aleo</span>
-                <h1>Assert off-chain facts, challenge them, resolve disputes privately.</h1>
-                <p>
-                  An economically secured optimistic oracle with public assertion state and
-                  aggregate tallies, plus private Aleo records for voting rights, vote receipts,
-                  and voter awards.
-                </p>
-                <div className="privacy-metrics" aria-label="Privacy properties">
-                  <span>Public assertion lifecycle</span>
-                  <span>Private voting records</span>
-                  <span>Zero-knowledge execution</span>
-                </div>
+            <section className="app-intro" aria-labelledby="app-title">
+              <div>
+                <span className="eyebrow">Aleo testnet</span>
+                <h1 id="app-title">Oracle console</h1>
+                <p>Create, dispute, inspect, vote on, and settle assertions.</p>
               </div>
-              <div className="hero-art" aria-hidden="true">
-                <img alt="" src={heroArt} />
-              </div>
+              <a href="https://dark-optimistic-oracle.github.io/webdocs/">Protocol documentation</a>
             </section>
 
             <MainComponent />
           </main>
 
           <footer className="site-footer">
-            Dark Optimistic Oracle on Aleo Testnet
+            <span>Dark Optimistic Oracle on Aleo testnet</span>
+            <div>
+              <a href="https://dark-optimistic-oracle.github.io/website/">Website</a>
+              <a href="https://dark-optimistic-oracle.github.io/webdocs/">Docs</a>
+            </div>
           </footer>
         </div>
       </WalletModalProvider>

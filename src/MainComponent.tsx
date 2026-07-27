@@ -1,15 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
-  CircleDollarSign,
   FileText,
   Gavel,
   KeyRound,
   LockKeyhole,
   RadioTower,
   ShieldCheck,
-  Vote,
 } from 'lucide-react';
 import { useWallet } from '@provablehq/aleo-wallet-adaptor-react';
 
@@ -174,16 +172,6 @@ export default function MainComponent() {
     });
   }, []);
 
-  const workflowSteps = useMemo(
-    () => [
-      { label: 'Assert', detail: 'Post a claim and public DOOR bond', icon: FileText },
-      { label: 'Dispute', detail: 'Challenge before the liveness window closes', icon: Gavel },
-      { label: 'Vote', detail: 'Use private records while aggregate tallies remain public', icon: Vote },
-      { label: 'Settle', detail: 'Collect public role awards or private voter awards', icon: CircleDollarSign },
-    ],
-    []
-  );
-
   const loadAssertion = async () => {
     const assertionId = toField(lookupId);
     setLookupState({ status: 'loading' });
@@ -307,21 +295,6 @@ export default function MainComponent() {
           <span className="eyebrow">Wallet</span>
           <strong>{connected ? `${address?.slice(0, 12)}...${address?.slice(-6)}` : 'Shield not connected'}</strong>
         </div>
-      </div>
-
-      <div className="workflow-rail" aria-label="Oracle workflow">
-        {workflowSteps.map((step) => {
-          const Icon = step.icon;
-          return (
-            <article className="workflow-step" key={step.label}>
-              <Icon aria-hidden="true" size={20} />
-              <div>
-                <strong>{step.label}</strong>
-                <span>{step.detail}</span>
-              </div>
-            </article>
-          );
-        })}
       </div>
 
       <div className="view-tabs" role="tablist" aria-label="Oracle views">
@@ -597,14 +570,17 @@ export default function MainComponent() {
       )}
 
       {import.meta.env.DEV && (
-        <aside className="account-strip" aria-label="Local demo accounts">
-          {localDemoAccounts.map((account) => (
-            <div key={account.role}>
-              <span>{account.role}</span>
-              <code>{account.address}</code>
-            </div>
-          ))}
-        </aside>
+        <details className="demo-details">
+          <summary>Local demo accounts</summary>
+          <aside className="account-strip" aria-label="Local demo accounts">
+            {localDemoAccounts.map((account) => (
+              <div key={account.role}>
+                <span>{account.role}</span>
+                <code>{account.address}</code>
+              </div>
+            ))}
+          </aside>
+        </details>
       )}
     </section>
   );
