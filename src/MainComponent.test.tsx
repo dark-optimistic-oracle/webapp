@@ -56,11 +56,44 @@ describe('MainComponent', () => {
     expect(executeTransactionMock).toHaveBeenCalledWith(
       expect.objectContaining({
         program: 'dark_optimistic_oracle.aleo',
-        function: 'assertion',
-        inputs: expect.arrayContaining(['777field', '888field', '100_000_000u128', '1_000_000u128', '10000u32', '20000u32']),
+        function: 'create_assertion',
+        inputs: [
+          expect.stringMatching(
+            /id: 777field,[\s\S]*title: 888field,[\s\S]*cost: 100_000_000u128,[\s\S]*voter_stake: 1_000_000u128,[\s\S]*dispute_deadline_block_height: 10000u32,[\s\S]*voting_deadline_block_height: 20000u32/
+          ),
+        ],
+        fee: 1_000_000,
       })
     );
-    expect(screen.getByText(/submitted assertion/i)).toBeInTheDocument();
+    expect(screen.getByText(/submitted create_assertion/i)).toBeInTheDocument();
+  });
+
+  it('uses the deployed ABI names for dispute and settlement transactions', async () => {
+    render(<MainComponent />);
+
+    fireEvent.click(screen.getByRole('tab', { name: /dispute/i }));
+    fireEvent.click(screen.getByRole('button', { name: /dispute assertion/i }));
+
+    await waitFor(() =>
+      expect(executeTransactionMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          function: 'dispute_assertion',
+          inputs: ['123field', '100_000_000u128'],
+        })
+      )
+    );
+
+    fireEvent.click(screen.getByRole('tab', { name: /settle/i }));
+    fireEvent.click(screen.getByRole('button', { name: /asserter collect/i }));
+
+    await waitFor(() =>
+      expect(executeTransactionMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          function: 'collect_assertion_cost',
+          inputs: ['100_000_000u128', '123field'],
+        })
+      )
+    );
   });
 
   it('shows an error instead of submitting when the wallet is disconnected', () => {

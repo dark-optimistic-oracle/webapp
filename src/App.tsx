@@ -59,7 +59,7 @@ function App() {
           </main>
 
           <footer className="site-footer">
-            Dark Optimistic Oracle local UI for dark_optimistic_oracle.aleo.
+            Dark Optimistic Oracle on Aleo Testnet
           </footer>
         </div>
       </WalletModalProvider>

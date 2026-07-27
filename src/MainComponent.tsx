@@ -22,6 +22,8 @@ const DEFAULT_VOTER_STAKE = '1_000_000';
 const DEFAULT_DISPUTE_DEADLINE = '10000';
 const DEFAULT_VOTING_DEADLINE = '20000';
 const DEFAULT_AWARD = '1_010_000';
+const DEFAULT_TRANSACTION_FEE = 1_000_000;
+const TESTNET_API_URL = import.meta.env.VITE_ALEO_API_URL ?? 'https://api.explorer.provable.com/v1';
 
 const samplePrivatePaymentRecord =
   '{ owner: aleo1azkl6rf3x5t3qk48rfsprxdkx6m7e33un9qpq0aqu036rzpm9qyq596vzw.private, amount: 1000000u128.private, token_id: 346688784394585735039324415800163929700021701423791533632764818774905958305field.private, external_authorization_required: false.private, authorized_until: 4294967295u32.private, _nonce: 7217685150051585053344308293369013275054479635381924146506947736298899083074group.public, _version: 1u8.public }';
@@ -106,13 +108,16 @@ export default function MainComponent() {
   const [assertContent, setAssertContent] = useState(DEFAULT_CONTENT_FIELD);
   const [assertCost, setAssertCost] = useState(DEFAULT_ASSERTION_COST);
   const [voterStake, setVoterStake] = useState(DEFAULT_VOTER_STAKE);
+  const [disputeDeadline, setDisputeDeadline] = useState(import.meta.env.DEV ? DEFAULT_DISPUTE_DEADLINE : '');
+  const [votingDeadline, setVotingDeadline] = useState(import.meta.env.DEV ? DEFAULT_VOTING_DEADLINE : '');
   const [disputeId, setDisputeId] = useState(DEFAULT_ASSERTION_ID);
-  const [privatePaymentRecord, setPrivatePaymentRecord] = useState(samplePrivatePaymentRecord);
+  const [privatePaymentRecord, setPrivatePaymentRecord] = useState(import.meta.env.DEV ? samplePrivatePaymentRecord : '');
   const [votingRightId, setVotingRightId] = useState(DEFAULT_ASSERTION_ID);
-  const [votingRightRecord, setVotingRightRecord] = useState(sampleVotingRightRecord);
-  const [votingReceiptRecord, setVotingReceiptRecord] = useState(sampleVotingReceiptRecord);
+  const [votingRightRecord, setVotingRightRecord] = useState(import.meta.env.DEV ? sampleVotingRightRecord : '');
+  const [votingReceiptRecord, setVotingReceiptRecord] = useState(import.meta.env.DEV ? sampleVotingReceiptRecord : '');
   const [awardAmount, setAwardAmount] = useState(DEFAULT_AWARD);
   const [txNotice, setTxNotice] = useState<TxNotice | null>(null);
+  const [programAvailable, setProgramAvailable] = useState(import.meta.env.DEV);
 
   useEffect(() => {
     const computeHash = async () => {
@@ -132,6 +137,39 @@ export default function MainComponent() {
 
     computeHash().catch(() => setAssertContent(DEFAULT_CONTENT_FIELD));
   }, [assertRawContent]);
+
+  useEffect(() => {
+    if (import.meta.env.DEV) return;
+
+    const loadTestnetState = async () => {
+      const [heightResponse, programResponse] = await Promise.all([
+        fetch(`${TESTNET_API_URL}/testnet/latest/height`),
+        fetch(`${TESTNET_API_URL}/testnet/program/${DOO_PROGRAM_ID}`),
+      ]);
+
+      if (!heightResponse.ok) throw new Error(`Unable to read testnet height (${heightResponse.status}).`);
+      const currentHeight = Number(await heightResponse.json());
+      if (!Number.isSafeInteger(currentHeight)) throw new Error('Testnet returned an invalid block height.');
+
+      setDisputeDeadline(String(currentHeight + 10_000));
+      setVotingDeadline(String(currentHeight + 20_000));
+      setProgramAvailable(programResponse.ok);
+
+      if (!programResponse.ok) {
+        setTxNotice({
+          type: 'error',
+          message: `${DOO_PROGRAM_ID} is not deployed on Aleo testnet yet. Transactions are disabled.`,
+        });
+      }
+    };
+
+    loadTestnetState().catch(() => {
+      setTxNotice({
+        type: 'error',
+        message: 'Could not verify Aleo testnet state. Transactions are disabled until the network is reachable.',
+      });
+    });
+  }, []);
 
   const workflowSteps = useMemo(
     () => [
@@ -159,7 +197,7 @@ export default function MainComponent() {
         program: DOO_PROGRAM_ID,
         function: func,
         inputs,
-        fee: 100_000,
+        fee: DEFAULT_TRANSACTION_FEE,
         privateFee: false,
       });
 
@@ -176,31 +214,35 @@ export default function MainComponent() {
   };
 
   const submitAssertion = () =>
-    executeTransaction('assertion', [
-      toField(assertId),
-      toField(assertTitle),
-      assertContent || DEFAULT_CONTENT_FIELD,
-      toU128(assertCost),
-      toU128(voterStake),
-      toU32(DEFAULT_DISPUTE_DEADLINE),
-      toU32(DEFAULT_VOTING_DEADLINE),
+    executeTransaction('create_assertion', [
+      `{
+        id: ${toField(assertId)},
+        title: ${toField(assertTitle)},
+        content_hash: ${assertContent || DEFAULT_CONTENT_FIELD},
+        cost: ${toU128(assertCost)},
+        voter_stake: ${toU128(voterStake)},
+        dispute_deadline_block_height: ${toU32(disputeDeadline)},
+        voting_deadline_block_height: ${toU32(votingDeadline)}
+      }`,
     ]);
 
-  const disputeAssertion = () => executeTransaction('dispute', [toField(disputeId), toU128(assertCost)]);
+  const disputeAssertion = () => executeTransaction('dispute_assertion', [toField(disputeId), toU128(assertCost)]);
 
   const buyVotingRight = () =>
-    executeTransaction('voting_right', [privatePaymentRecord, toField(votingRightId), toU128(voterStake)]);
+    executeTransaction('new_voting_right', [privatePaymentRecord, toField(votingRightId), toU128(voterStake)]);
 
   const voteOnAssertion = (supportsAssertion: boolean) =>
     executeTransaction(supportsAssertion ? 'confirm' : 'deny', [votingRightRecord]);
 
-  const collectForRole = (role: 'asserter_collect' | 'disputer_collect' | 'voter_collect' | 'voter_refund') => {
-    if (role === 'voter_collect') {
+  const collectForRole = (
+    role: 'collect_assertion_cost' | 'collect_dispute_award' | 'collect_voting_award' | 'refund_voting_right'
+  ) => {
+    if (role === 'collect_voting_award') {
       executeTransaction(role, [toU128(awardAmount), votingReceiptRecord]);
       return;
     }
 
-    if (role === 'voter_refund') {
+    if (role === 'refund_voting_right') {
       executeTransaction(role, [toU128(voterStake), votingRightRecord]);
       return;
     }
@@ -212,8 +254,8 @@ export default function MainComponent() {
     <section className="oracle-console" aria-label="Dark Optimistic Oracle console">
       <div className="status-strip">
         <div>
-          <span className="eyebrow">Local devnet target</span>
-          <strong>{DOO_PROGRAM_ID}</strong>
+          <span className="eyebrow">Aleo testnet target</span>
+          <strong>{programAvailable ? DOO_PROGRAM_ID : `${DOO_PROGRAM_ID} unavailable`}</strong>
         </div>
         <div>
           <span className="eyebrow">Asset</span>
@@ -317,6 +359,14 @@ export default function MainComponent() {
               Voter stake
               <input value={voterStake} onChange={(event) => setVoterStake(event.target.value)} />
             </label>
+            <label>
+              Dispute deadline block
+              <input value={disputeDeadline} onChange={(event) => setDisputeDeadline(event.target.value)} />
+            </label>
+            <label>
+              Voting deadline block
+              <input value={votingDeadline} onChange={(event) => setVotingDeadline(event.target.value)} />
+            </label>
           </div>
           <label>
             Claim text
@@ -326,7 +376,12 @@ export default function MainComponent() {
             Content hash field
             <input readOnly value={assertContent} />
           </label>
-          <button className="primary-action" disabled={!connected} onClick={submitAssertion} type="button">
+          <button
+            className="primary-action"
+            disabled={!connected || !programAvailable || !disputeDeadline.trim() || !votingDeadline.trim()}
+            onClick={submitAssertion}
+            type="button"
+          >
             <FileText aria-hidden="true" size={18} />
             Submit assertion
           </button>
@@ -347,7 +402,7 @@ export default function MainComponent() {
             Dispute bond
             <input value={assertCost} onChange={(event) => setAssertCost(event.target.value)} />
           </label>
-          <button className="danger-action" disabled={!connected} onClick={disputeAssertion} type="button">
+          <button className="danger-action" disabled={!connected || !programAvailable} onClick={disputeAssertion} type="button">
             <Gavel aria-hidden="true" size={18} />
             Dispute assertion
           </button>
@@ -374,7 +429,7 @@ export default function MainComponent() {
             Private DOOR payment record
             <textarea rows={4} value={privatePaymentRecord} onChange={(event) => setPrivatePaymentRecord(event.target.value)} />
           </label>
-          <button className="secondary-action" disabled={!connected} onClick={buyVotingRight} type="button">
+          <button className="secondary-action" disabled={!connected || !programAvailable} onClick={buyVotingRight} type="button">
             <KeyRound aria-hidden="true" size={18} />
             Buy voting right
           </button>
@@ -383,11 +438,11 @@ export default function MainComponent() {
             <textarea rows={4} value={votingRightRecord} onChange={(event) => setVotingRightRecord(event.target.value)} />
           </label>
           <div className="button-pair">
-            <button className="primary-action" disabled={!connected} onClick={() => voteOnAssertion(true)} type="button">
+            <button className="primary-action" disabled={!connected || !programAvailable} onClick={() => voteOnAssertion(true)} type="button">
               <CheckCircle2 aria-hidden="true" size={18} />
               Confirm privately
             </button>
-            <button className="danger-action" disabled={!connected} onClick={() => voteOnAssertion(false)} type="button">
+            <button className="danger-action" disabled={!connected || !programAvailable} onClick={() => voteOnAssertion(false)} type="button">
               <AlertTriangle aria-hidden="true" size={18} />
               Deny privately
             </button>
@@ -428,16 +483,16 @@ export default function MainComponent() {
             <textarea rows={3} value={votingRightRecord} onChange={(event) => setVotingRightRecord(event.target.value)} />
           </label>
           <div className="settlement-grid">
-            <button className="primary-action" disabled={!connected} onClick={() => collectForRole('asserter_collect')} type="button">
+            <button className="primary-action" disabled={!connected || !programAvailable} onClick={() => collectForRole('collect_assertion_cost')} type="button">
               Asserter collect
             </button>
-            <button className="secondary-action" disabled={!connected} onClick={() => collectForRole('disputer_collect')} type="button">
+            <button className="secondary-action" disabled={!connected || !programAvailable} onClick={() => collectForRole('collect_dispute_award')} type="button">
               Disputer collect
             </button>
-            <button className="primary-action" disabled={!connected} onClick={() => collectForRole('voter_collect')} type="button">
+            <button className="primary-action" disabled={!connected || !programAvailable} onClick={() => collectForRole('collect_voting_award')} type="button">
               Voter collect
             </button>
-            <button className="secondary-action" disabled={!connected} onClick={() => collectForRole('voter_refund')} type="button">
+            <button className="secondary-action" disabled={!connected || !programAvailable} onClick={() => collectForRole('refund_voting_right')} type="button">
               Voter refund
             </button>
           </div>
