@@ -17,6 +17,7 @@ import {
   formatAleoAuditInputs,
   type AleoAuditCall,
 } from './aleoAudit';
+import { waitForWalletTransaction } from './aleoTransactionStatus';
 
 const DOO_PROGRAM_ID = 'dark_optimistic_oracle.aleo';
 const DEFAULT_ASSERTION_ID = '123';
@@ -155,7 +156,12 @@ const readProgramMapping = async (mappingName: string, key: string) => {
 };
 
 export default function MainComponent() {
-  const { address, connected, executeTransaction: executeWalletTransaction } = useWallet();
+  const {
+    address,
+    connected,
+    executeTransaction: executeWalletTransaction,
+    transactionStatus,
+  } = useWallet();
   const [activeView, setActiveView] = useState<View>('proposals');
   const [assertId, setAssertId] = useState(DEFAULT_ASSERTION_ID);
   const [assertTitle, setAssertTitle] = useState(DEFAULT_TITLE_FIELD);
@@ -313,14 +319,57 @@ export default function MainComponent() {
 
     try {
       const result = await executeWalletTransaction(request);
+      const walletRequestId = result?.transactionId ?? null;
 
       completeAleoCall(audit, 'submitted', {
-        result: { transactionId: result?.transactionId ?? null },
+        result: { walletRequestId },
       });
+
+      if (!walletRequestId || !transactionStatus) {
+        setTxNotice({
+          type: 'success',
+          message: `Submitted ${func}. The wallet has not returned a trackable request ID.`,
+        });
+        return;
+      }
 
       setTxNotice({
         type: 'success',
-        message: `Submitted ${func}. Transaction ID: ${result?.transactionId ?? 'pending wallet response'}`,
+        message: `Submitted ${func}. Wallet request ${walletRequestId}; awaiting Testnet finality.`,
+      });
+
+      const finalStatus = await waitForWalletTransaction(transactionStatus, walletRequestId);
+      const onchainTransactionId = finalStatus.transactionId ?? null;
+      completeAleoCall(audit, 'response', {
+        result: {
+          walletRequestId,
+          walletStatus: finalStatus.status,
+          onchainTransactionId,
+          statusPollAttempts: finalStatus.attempts,
+          timedOut: finalStatus.timedOut,
+          walletError: finalStatus.error ?? null,
+        },
+      });
+
+      if (finalStatus.status.toLowerCase() === 'accepted') {
+        setTxNotice({
+          type: 'success',
+          message: `${func} accepted on Testnet. Transaction ID: ${onchainTransactionId ?? 'not returned by Shield'}`,
+        });
+        return;
+      }
+
+      if (finalStatus.timedOut) {
+        setTxNotice({
+          type: 'success',
+          message: `${func} is still pending. Wallet request: ${walletRequestId}`,
+        });
+        return;
+      }
+
+      setTxNotice({
+        type: 'error',
+        message: `${func} ${finalStatus.status}${finalStatus.error ? `: ${finalStatus.error}` : '.'}`,
       });
     } catch (error) {
       failAleoCall(audit, error);

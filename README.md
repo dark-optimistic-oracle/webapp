@@ -37,10 +37,14 @@ pnpm run build
 ## Auditing Aleo calls
 
 Open the browser developer console and filter for `[Aleo audit]`. The app logs
-one JSON request entry and one response, submission, or error entry for every
+one JSON request entry and one or more response, submission, or error entries for every
 frontend-initiated Aleo call. Each entry includes a sequence number and call ID,
 the program and function, all named positional inputs or read parameters, the
-provider URL, fee settings, caller, and transaction ID when Shield returns one.
+provider URL, fee settings, and caller. For writes, the submission entry labels
+Shield's temporary identifier as `walletRequestId`; the app then polls Shield
+and records the terminal wallet status and real `onchainTransactionId` after
+Testnet accepts the transaction. A pending request is never presented as an
+on-chain transaction ID.
 
 Private-record plaintext passed to Shield is never written to the console. The
 audit records its input name, private-record classification, plaintext length,

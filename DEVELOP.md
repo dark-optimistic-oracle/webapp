@@ -108,8 +108,12 @@ written to the browser console with the prefix `[Aleo audit]`. Entries use the
 `aleo-browser-audit/v1` schema and contain a monotonic sequence number, call ID,
 timestamp, phase, description, network, program, called function, and every
 parameter. Read entries include the exact HTTP method and provider URL;
-transaction entries include ordered and named Leo inputs, caller, fee, fee
-privacy, and the returned transaction ID or error.
+transaction entries include ordered and named Leo inputs, caller, fee, and fee
+privacy. Shield's initial temporary identifier is recorded as
+`walletRequestId`. The frontend polls `transactionStatus` for up to two minutes
+and adds a response entry with the terminal wallet status, poll count, timeout
+state, and real `onchainTransactionId` when accepted. This avoids presenting a
+wallet request ID as blockchain evidence.
 
 Request and response/submission entries repeat the complete call description so
 each line can be audited independently. Values are serialized immediately to

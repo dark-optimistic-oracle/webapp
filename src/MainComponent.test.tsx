@@ -3,10 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import MainComponent from './MainComponent';
 
 const executeTransactionMock = vi.fn();
+const transactionStatusMock = vi.fn();
 let walletState = {
   address: 'aleo1mockaddress000000000000000000000000000000000000000000000000',
   connected: true,
   executeTransaction: executeTransactionMock,
+  transactionStatus: transactionStatusMock,
 };
 
 vi.mock('@provablehq/aleo-wallet-adaptor-react', () => ({
@@ -16,11 +18,17 @@ vi.mock('@provablehq/aleo-wallet-adaptor-react', () => ({
 describe('MainComponent', () => {
   beforeEach(() => {
     executeTransactionMock.mockReset();
-    executeTransactionMock.mockResolvedValue({ transactionId: 'mock_tx_id' });
+    transactionStatusMock.mockReset();
+    executeTransactionMock.mockResolvedValue({ transactionId: 'mock_wallet_request' });
+    transactionStatusMock.mockResolvedValue({
+      status: 'accepted',
+      transactionId: 'at1mock_onchain_transaction',
+    });
     walletState = {
       address: 'aleo1mockaddress000000000000000000000000000000000000000000000000',
       connected: true,
       executeTransaction: executeTransactionMock,
+      transactionStatus: transactionStatusMock,
     };
   });
 
@@ -147,11 +155,21 @@ describe('MainComponent', () => {
       expect.objectContaining({
         phase: 'submitted',
         function: 'create_assertion',
-        result: { transactionId: 'mock_tx_id' },
+        result: { walletRequestId: 'mock_wallet_request' },
+      }),
+      expect.objectContaining({
+        phase: 'response',
+        function: 'create_assertion',
+        result: expect.objectContaining({
+          walletRequestId: 'mock_wallet_request',
+          walletStatus: 'accepted',
+          onchainTransactionId: 'at1mock_onchain_transaction',
+          timedOut: false,
+        }),
       }),
     ]));
     consoleSpy.mockRestore();
-    expect(screen.getByText(/submitted create_assertion/i)).toBeInTheDocument();
+    expect(screen.getByText(/create_assertion accepted on testnet/i)).toBeInTheDocument();
   });
 
   it('logs every mapping read with its program, mapping, key, URL, and response', async () => {
