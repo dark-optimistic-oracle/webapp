@@ -78,7 +78,36 @@ describe('MainComponent', () => {
     expect(screen.getByRole('button', { name: /deny privately/i })).toBeEnabled();
   });
 
+  it('redacts private Aleo records from audit logs while retaining a fingerprint', async () => {
+    const consoleSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+    render(<MainComponent />);
+
+    fireEvent.click(screen.getByRole('tab', { name: /private vote/i }));
+    fireEvent.change(screen.getByLabelText(/private DOOR payment record/i), {
+      target: { value: '{ owner: aleo1private, amount: 1000000u128 }' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /buy voting right/i }));
+
+    await waitFor(() => expect(executeTransactionMock).toHaveBeenCalledTimes(1));
+    const requestEntry = consoleSpy.mock.calls
+      .filter(([prefix]) => prefix === '[Aleo audit]')
+      .map(([, entry]) => JSON.parse(String(entry)))
+      .find((entry) => entry.phase === 'request' && entry.function === 'new_voting_right');
+
+    expect(JSON.stringify(requestEntry)).not.toContain('aleo1private');
+    expect(requestEntry.parameters.inputs[0]).toEqual(expect.objectContaining({
+      name: 'payment',
+      value: expect.objectContaining({
+        redacted: true,
+        classification: 'private Aleo record',
+        sha256: expect.stringMatching(/^[0-9a-f]{64}$/),
+      }),
+    }));
+    consoleSpy.mockRestore();
+  });
+
   it('submits assertion transactions with formatted Aleo inputs', async () => {
+    const consoleSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined);
     render(<MainComponent />);
 
     fireEvent.click(screen.getByRole('tab', { name: /create/i }));
@@ -99,7 +128,60 @@ describe('MainComponent', () => {
         fee: 1_000_000,
       })
     );
+    const auditEntries = consoleSpy.mock.calls
+      .filter(([prefix]) => prefix === '[Aleo audit]')
+      .map(([, entry]) => JSON.parse(String(entry)));
+    expect(auditEntries).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        phase: 'request',
+        kind: 'transaction',
+        program: 'dark_optimistic_oracle.aleo',
+        function: 'create_assertion',
+        parameters: expect.objectContaining({
+          caller: walletState.address,
+          inputs: [expect.objectContaining({ position: 0, name: 'assertion' })],
+          fee: 1_000_000,
+          privateFee: false,
+        }),
+      }),
+      expect.objectContaining({
+        phase: 'submitted',
+        function: 'create_assertion',
+        result: { transactionId: 'mock_tx_id' },
+      }),
+    ]));
+    consoleSpy.mockRestore();
     expect(screen.getByText(/submitted create_assertion/i)).toBeInTheDocument();
+  });
+
+  it('logs every mapping read with its program, mapping, key, URL, and response', async () => {
+    const consoleSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => '1u64',
+    } as Response)));
+
+    render(<MainComponent />);
+    fireEvent.click(screen.getByRole('button', { name: /load assertion/i }));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(5));
+
+    const requests = consoleSpy.mock.calls
+      .filter(([prefix]) => prefix === '[Aleo audit]')
+      .map(([, entry]) => JSON.parse(String(entry)))
+      .filter((entry) => entry.phase === 'request' && entry.kind === 'read');
+    expect(requests).toHaveLength(5);
+    expect(requests[0]).toEqual(expect.objectContaining({
+      program: 'dark_optimistic_oracle.aleo',
+      function: 'get_mapping_value',
+      parameters: expect.objectContaining({
+        mapping: 'assertions',
+        key: '123field',
+        httpMethod: 'GET',
+        url: expect.stringContaining('/mapping/assertions/123field'),
+      }),
+    }));
+    consoleSpy.mockRestore();
   });
 
   it('uses the deployed ABI names for dispute and settlement transactions', async () => {

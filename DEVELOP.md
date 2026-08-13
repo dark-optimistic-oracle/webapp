@@ -100,3 +100,20 @@ The production build was also exercised in a browser against the deployed
 Testnet oracle. The console, assertion lookup, and workflow tabs rendered
 without browser warnings or errors. Signing was intentionally not attempted
 because that requires an interactive Shield wallet approval.
+
+## Browser audit log
+
+Every frontend-initiated Aleo read and every transaction handed to Shield is
+written to the browser console with the prefix `[Aleo audit]`. Entries use the
+`aleo-browser-audit/v1` schema and contain a monotonic sequence number, call ID,
+timestamp, phase, description, network, program, called function, and every
+parameter. Read entries include the exact HTTP method and provider URL;
+transaction entries include ordered and named Leo inputs, caller, fee, fee
+privacy, and the returned transaction ID or error.
+
+Request and response/submission entries repeat the complete call description so
+each line can be audited independently. Values are serialized immediately to
+prevent later object mutation from changing historical console output. Private
+record plaintext is replaced with a classification, plaintext length, and
+SHA-256 fingerprint before logging. The fingerprint allows correlation across
+an audit without disclosing a spendable record.

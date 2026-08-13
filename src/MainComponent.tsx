@@ -10,6 +10,13 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useWallet } from '@provablehq/aleo-wallet-adaptor-react';
+import {
+  beginAleoCall,
+  completeAleoCall,
+  failAleoCall,
+  formatAleoAuditInputs,
+  type AleoAuditCall,
+} from './aleoAudit';
 
 const DOO_PROGRAM_ID = 'dark_optimistic_oracle.aleo';
 const DEFAULT_ASSERTION_ID = '123';
@@ -90,7 +97,7 @@ const toU32 = (value: string) => {
   return trimmed.endsWith('u32') ? trimmed : `${trimmed}u32`;
 };
 
-const fetchTestnet = async (path: string) => {
+const fetchTestnet = async (path: string, call: Omit<AleoAuditCall, 'kind' | 'network'>) => {
   const endpoints = OFFICIAL_TESTNET_APIS.includes(TESTNET_API_URL)
     ? [
         TESTNET_API_URL,
@@ -100,11 +107,26 @@ const fetchTestnet = async (path: string) => {
   let lastResponse: Response | null = null;
   let lastError: unknown;
   for (const endpoint of endpoints) {
+    const url = `${endpoint}${path}`;
+    const audit = beginAleoCall({
+      kind: 'read',
+      network: 'testnet',
+      ...call,
+      parameters: {
+        ...call.parameters,
+        httpMethod: 'GET',
+        url,
+      },
+    });
     try {
-      const response = await fetch(`${endpoint}${path}`);
+      const response = await fetch(url);
+      completeAleoCall(audit, 'response', {
+        result: { httpStatus: response.status, ok: response.ok },
+      });
       if (response.ok) return response;
       lastResponse = response;
     } catch (error) {
+      failAleoCall(audit, error);
       lastError = error;
     }
   }
@@ -114,7 +136,13 @@ const fetchTestnet = async (path: string) => {
 
 const readProgramMapping = async (mappingName: string, key: string) => {
   const response = await fetchTestnet(
-    `/testnet/program/${DOO_PROGRAM_ID}/mapping/${mappingName}/${encodeURIComponent(key)}`
+    `/testnet/program/${DOO_PROGRAM_ID}/mapping/${mappingName}/${encodeURIComponent(key)}`,
+    {
+      description: `Read ${DOO_PROGRAM_ID}.${mappingName}[${key}]`,
+      program: DOO_PROGRAM_ID,
+      function: 'get_mapping_value',
+      parameters: { mapping: mappingName, key },
+    },
   );
 
   if (response.status === 404) return null;
@@ -174,8 +202,17 @@ export default function MainComponent() {
 
     const loadTestnetState = async () => {
       const [heightResponse, programResponse] = await Promise.all([
-        fetchTestnet('/testnet/block/height/latest'),
-        fetchTestnet(`/testnet/program/${DOO_PROGRAM_ID}`),
+        fetchTestnet('/testnet/block/height/latest', {
+          description: 'Read the latest Aleo Testnet block height',
+          function: 'get_latest_block_height',
+          parameters: {},
+        }),
+        fetchTestnet(`/testnet/program/${DOO_PROGRAM_ID}`, {
+          description: `Read deployed program ${DOO_PROGRAM_ID}`,
+          program: DOO_PROGRAM_ID,
+          function: 'get_program',
+          parameters: { programId: DOO_PROGRAM_ID },
+        }),
       ]);
 
       if (!heightResponse.ok) throw new Error(`Unable to read testnet height (${heightResponse.status}).`);
@@ -241,7 +278,7 @@ export default function MainComponent() {
     }
   };
 
-  const executeTransaction = async (func: string, inputs: string[]) => {
+  const executeTransaction = async (func: string, inputs: string[], inputNames: string[]) => {
     if (!connected || !address) {
       setTxNotice({ type: 'error', message: 'Connect Shield wallet before submitting a transaction.' });
       return;
@@ -252,13 +289,33 @@ export default function MainComponent() {
       return;
     }
 
+    const request = {
+      program: DOO_PROGRAM_ID,
+      function: func,
+      inputs,
+      fee: DEFAULT_TRANSACTION_FEE,
+      privateFee: false,
+    };
+    const auditInputs = await formatAleoAuditInputs(inputs, inputNames);
+    const audit = beginAleoCall({
+      kind: 'transaction',
+      network: 'testnet',
+      description: `Submit ${DOO_PROGRAM_ID}.${func}`,
+      program: DOO_PROGRAM_ID,
+      function: func,
+      parameters: {
+        caller: address,
+        inputs: auditInputs,
+        fee: request.fee,
+        privateFee: request.privateFee,
+      },
+    });
+
     try {
-      const result = await executeWalletTransaction({
-        program: DOO_PROGRAM_ID,
-        function: func,
-        inputs,
-        fee: DEFAULT_TRANSACTION_FEE,
-        privateFee: false,
+      const result = await executeWalletTransaction(request);
+
+      completeAleoCall(audit, 'submitted', {
+        result: { transactionId: result?.transactionId ?? null },
       });
 
       setTxNotice({
@@ -266,6 +323,7 @@ export default function MainComponent() {
         message: `Submitted ${func}. Transaction ID: ${result?.transactionId ?? 'pending wallet response'}`,
       });
     } catch (error) {
+      failAleoCall(audit, error);
       setTxNotice({
         type: 'error',
         message: error instanceof Error ? error.message : `Unable to submit ${func}.`,
@@ -284,35 +342,43 @@ export default function MainComponent() {
         dispute_deadline_block_height: ${toU32(disputeDeadline)},
         voting_deadline_block_height: ${toU32(votingDeadline)}
       }`,
-    ]);
+    ], ['assertion']);
 
-  const disputeAssertion = () => executeTransaction('dispute_assertion', [toField(disputeId), toU128(assertCost)]);
+  const disputeAssertion = () => executeTransaction(
+    'dispute_assertion',
+    [toField(disputeId), toU128(assertCost)],
+    ['assertion_id', 'assertion_cost'],
+  );
 
   const buyVotingRight = () =>
-    executeTransaction('new_voting_right', [privatePaymentRecord, toField(votingRightId), toU128(voterStake)]);
+    executeTransaction(
+      'new_voting_right',
+      [privatePaymentRecord, toField(votingRightId), toU128(voterStake)],
+      ['payment', 'assertion_id', 'voter_stake'],
+    );
 
   const voteOnAssertion = (supportsAssertion: boolean) =>
-    executeTransaction(supportsAssertion ? 'confirm' : 'deny', [votingRightRecord]);
+    executeTransaction(supportsAssertion ? 'confirm' : 'deny', [votingRightRecord], ['voting_right']);
 
   const collectForRole = (
     role: 'collect_assertion_award' | 'collect_dispute_award' | 'collect_voting_award' | 'refund_voting_right'
   ) => {
     if (role === 'collect_voting_award') {
-      executeTransaction(role, [toU128(awardAmount), votingReceiptRecord]);
+      executeTransaction(role, [toU128(awardAmount), votingReceiptRecord], ['award_amount', 'voting_receipt']);
       return;
     }
 
     if (role === 'refund_voting_right') {
-      executeTransaction(role, [toU128(voterStake), votingRightRecord]);
+      executeTransaction(role, [toU128(voterStake), votingRightRecord], ['refund_amount', 'voting_right']);
       return;
     }
 
     if (role === 'collect_assertion_award') {
-      executeTransaction(role, [toField(disputeId), toU128(asserterPayout)]);
+      executeTransaction(role, [toField(disputeId), toU128(asserterPayout)], ['assertion_id', 'payout_amount']);
       return;
     }
 
-    executeTransaction(role, [toField(disputeId), toU128(disputerPayout)]);
+    executeTransaction(role, [toField(disputeId), toU128(disputerPayout)], ['assertion_id', 'payout_amount']);
   };
 
   return (

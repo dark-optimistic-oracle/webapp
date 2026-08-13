@@ -34,6 +34,19 @@ pnpm exec vitest run
 pnpm run build
 ```
 
+## Auditing Aleo calls
+
+Open the browser developer console and filter for `[Aleo audit]`. The app logs
+one JSON request entry and one response, submission, or error entry for every
+frontend-initiated Aleo call. Each entry includes a sequence number and call ID,
+the program and function, all named positional inputs or read parameters, the
+provider URL, fee settings, caller, and transaction ID when Shield returns one.
+
+Private-record plaintext passed to Shield is never written to the console. The
+audit records its input name, private-record classification, plaintext length,
+and SHA-256 fingerprint so an auditor can correlate calls without receiving a
+spendable record. Private keys are never available to or logged by the app.
+
 ## GitHub Pages
 
 The workflow in `.github/workflows/deploy-pages.yml` publishes from `main`. In repository Pages settings, select **GitHub Actions** as the source.
