@@ -86,6 +86,22 @@ describe('MainComponent', () => {
     expect(screen.getByRole('button', { name: /deny privately/i })).toBeEnabled();
   });
 
+  it('treats an HTTP 200 JSON null mapping value as missing state', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        status: 200,
+        json: async () => null,
+      } as Response)),
+    );
+
+    render(<MainComponent />);
+    fireEvent.click(screen.getByRole('button', { name: /load assertion/i }));
+
+    expect(await screen.findByText(/no on-chain assertion was found/i)).toBeInTheDocument();
+  });
+
   it('redacts private Aleo records from audit logs while retaining a fingerprint', async () => {
     const consoleSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined);
     render(<MainComponent />);

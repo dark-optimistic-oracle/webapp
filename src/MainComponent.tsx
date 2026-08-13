@@ -152,6 +152,7 @@ const readProgramMapping = async (mappingName: string, key: string) => {
   }
 
   const value: unknown = await response.json();
+  if (value === null || value === undefined || value === 'null') return null;
   return typeof value === 'string' ? value : JSON.stringify(value);
 };
 

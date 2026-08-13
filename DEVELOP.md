@@ -121,3 +121,8 @@ prevent later object mutation from changing historical console output. Private
 record plaintext is replaced with a classification, plaintext length, and
 SHA-256 fingerprint before logging. The fingerprint allows correlation across
 an audit without disclosing a spendable record.
+
+Provable can represent an absent mapping value as either HTTP 404 or a JSON
+`null` response with HTTP 200. The mapping reader treats both forms as missing
+state so an absent assertion or participant is never rendered as the literal
+string `"null"`.
