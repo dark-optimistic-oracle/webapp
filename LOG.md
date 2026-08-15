@@ -291,3 +291,10 @@ Pages-deployment gates. Its published page loaded the market, explanation, and
 documentation sections; public Testnet reads reported both programs available.
 No wallet was connected during any Pages smoke test, so no proof, signed
 transaction, submission, or fee occurred.
+
+Before that successful run, two prediction-market CI experiments identified
+macOS-only `/bin/zsh` path use and an undeclared `rg` dependency in the shell
+harness. The entrypoints now use portable Bash and standard `grep`. The exact
+23-test contract suite passed in a clean Ubuntu 24.04 amd64 container without
+either command. The container mounted public source read-only, loaded no secret
+environment file, and made no signed or broadcast Aleo call.
