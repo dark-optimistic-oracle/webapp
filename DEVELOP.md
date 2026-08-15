@@ -134,3 +134,8 @@ to human-readable operation explanations followed by exact JSON, and the UI's
 or commit repository files, so reviewed exports must still be appended and
 committed deliberately. The call inventory and retained evidence live in
 [LOG.md](LOG.md).
+
+`AGENTS.md` makes updating `LOG.md` a required completion step for future
+experiments, QA runs, deployments, and Aleo call sequences. It also defines the
+evidence fields and secret-redaction rules that future contributors and coding
+agents must follow.

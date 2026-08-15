@@ -54,7 +54,9 @@ spendable record. Private keys are never available to or logged by the app.
 Every redacted entry is also retained automatically in browser storage. Use the
 app's **Download audit LOG.md** control to export exact JSON evidence with a
 plain-English explanation for each operation. The complete call inventory and
-retained QA record are in [LOG.md](LOG.md).
+retained QA record are in [LOG.md](LOG.md). Contributors and coding agents must
+follow [AGENTS.md](AGENTS.md) and commit the relevant log entries with every
+experiment or Aleo call sequence.
 
 ## GitHub Pages
 
