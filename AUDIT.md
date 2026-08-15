@@ -87,3 +87,24 @@ Verification time: 2026-08-15 07:04 EDT (computer local time).
 
 This audit does not cover the Shield extension implementation, Aleo VM/prover,
 browser compromise, or the upgraded oracle's external dependencies.
+
+## 2026-08-15 — Remediation deployment dependency check
+
+Verification time: 2026-08-15 08:12 EDT (computer local time).
+
+The frontend remediation remains verified by 14/14 tests, lint, production
+build, and zero-advisory production/full dependency audits. Its private-fee
+selection and strict request validation are active in source and do not depend
+on a contract edition. The Pages workflow now requests pnpm `10.14.0`, exactly
+matching `packageManager`, so the pinned setup action cannot reject conflicting
+tool versions before the build.
+
+The prediction market was accepted as edition 1 on Testnet. The oracle security
+candidate remains edition 0 because consensus V18 aborted every large
+deployment attempt that reached a target block with insufficient certificate
+capacity; provider timeouts prevented several other broadcasts. No oracle
+attempt charged a fee or changed mappings. Until the oracle reaches edition 1,
+the webapp must be treated as a QA interface to the earlier Testnet contract,
+not as evidence that the administrator and voting-cutoff fixes are active
+on-chain. Exact public call evidence and the preserved-state checks are recorded
+in `LOG.md`.

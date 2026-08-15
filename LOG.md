@@ -63,20 +63,23 @@ Both are treated as missing state.
 
 ### Transactions
 
-All writes target `dark_optimistic_oracle.aleo`, use a public fee of 1,000,000
-microcredits, and require interactive Shield approval.
+All writes target `dark_optimistic_oracle.aleo`, use a fee of 1,000,000
+microcredits, and require interactive Shield approval. Public-balance flows use
+a public fee. Record-based voting flows use a private fee so the fee payer is
+not added as a public identity link; the called `confirm` or `deny` transition
+and aggregate vote counts remain public.
 
-| Function | Ordered named inputs | Operation |
-|---|---|---|
-| `create_assertion` | `assertion` | Bonds public DOOR and records the assertion ID, title, content hash, cost, voter stake, dispute deadline, and voting deadline. |
-| `dispute_assertion` | `assertion_id`, `assertion_cost` | Bonds matching public DOOR before the dispute deadline and opens private voting. |
-| `new_voting_right` | `payment`, `assertion_id`, `voter_stake` | Consumes a private DOOR payment record and creates a private voting-right record. `payment` is redacted in logs. |
-| `confirm` | `voting_right` | Consumes a private voting right, increments the public confirm aggregate, and returns a private receipt. |
-| `deny` | `voting_right` | Consumes a private voting right, increments the public deny aggregate, and returns a private receipt. |
-| `collect_voting_award` | `award_amount`, `voting_receipt` | Claims the private winning-voter award after voting closes. |
-| `refund_voting_right` | `refund_amount`, `voting_right` | Refunds an unused private voting right after voting closes. |
-| `collect_assertion_award` | `assertion_id`, `payout_amount` | Claims the public asserter payout after the applicable deadline and outcome checks. |
-| `collect_dispute_award` | `assertion_id`, `payout_amount` | Claims the public disputer payout when private voting rejects the assertion. |
+| Function | Ordered named inputs | Fee | Operation |
+|---|---|---|---|
+| `create_assertion` | `assertion` | Public | Bonds public DOOR and records the assertion ID, title, content hash, cost, voter stake, dispute deadline, and voting deadline. |
+| `dispute_assertion` | `assertion_id`, `assertion_cost` | Public | Bonds matching public DOOR before the dispute deadline and opens private voting. |
+| `new_voting_right` | `payment`, `assertion_id`, `voter_stake` | Private | Consumes a private DOOR payment record and creates a private voting-right record. `payment` is redacted in logs. |
+| `confirm` | `voting_right` | Private | Consumes a private voting right, increments the public confirm aggregate, and returns a private receipt. |
+| `deny` | `voting_right` | Private | Consumes a private voting right, increments the public deny aggregate, and returns a private receipt. |
+| `collect_voting_award` | `award_amount`, `voting_receipt` | Private | Claims the private winning-voter award after voting closes. |
+| `refund_voting_right` | `refund_amount`, `voting_right` | Private | Refunds an unused private voting right after voting closes. |
+| `collect_assertion_award` | `assertion_id`, `payout_amount` | Public | Claims the public asserter payout after the applicable deadline and outcome checks. |
+| `collect_dispute_award` | `assertion_id`, `payout_amount` | Public | Claims the public disputer payout when private voting rejects the assertion. |
 
 ## Retained live Testnet evidence
 
@@ -105,7 +108,7 @@ timestamp, and call ID are illustrative rather than retained live values.
 ### Private-record redaction
 
 ```json
-{"schema":"aleo-browser-audit/v1","sequence":3,"timestamp":"2026-08-15T00:00:01.000Z","callId":"aleo-call-2","phase":"request","kind":"transaction","network":"testnet","description":"Submit dark_optimistic_oracle.aleo.new_voting_right","program":"dark_optimistic_oracle.aleo","function":"new_voting_right","parameters":{"caller":"aleo1example","inputs":[{"position":0,"name":"payment","value":{"redacted":true,"classification":"private Aleo record","sha256":"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef","plaintextLength":412}},{"position":1,"name":"assertion_id","value":"187031922field"},{"position":2,"name":"voter_stake","value":"1000000u128"}],"fee":1000000,"privateFee":false}}
+{"schema":"aleo-browser-audit/v1","sequence":3,"timestamp":"2026-08-15T00:00:01.000Z","callId":"aleo-call-2","phase":"request","kind":"transaction","network":"testnet","description":"Submit dark_optimistic_oracle.aleo.new_voting_right","program":"dark_optimistic_oracle.aleo","function":"new_voting_right","parameters":{"caller":"aleo1example","inputs":[{"position":0,"name":"payment","value":{"redacted":true,"classification":"private Aleo record","sha256":"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef","plaintextLength":412}},{"position":1,"name":"assertion_id","value":"187031922field"},{"position":2,"name":"voter_stake","value":"1000000u128"}],"fee":1000000,"privateFee":true}}
 ```
 
 The example address and fingerprint are deliberately non-spendable placeholders.
@@ -164,3 +167,110 @@ All reads used network `testnet` and endpoint
 The audit found security issues that require remediation before Mainnet. This
 entry records the experiment and public network evidence; it is not a claim
 that the application is secure or an independent third-party audit.
+
+
+## Security remediation and Testnet upgrade experiment: 2026-08-15
+
+**What happened:** The audited contract fixes were compiled with Leo 4.4.1,
+checked against the deployed edition-0 interfaces, and submitted through the
+dedicated Testnet administrator. No wallet password, private key, seed phrase,
+private record, transaction signature, or raw provider error body is retained
+here.
+
+The experiment ran from approximately `2026-08-15T10:45:00Z` through
+`2026-08-15T12:12:25Z` using network `testnet` and the official Provable
+API endpoints.
+
+### Read-only preflight and compatibility calls
+
+| Call | Public parameters | Result and purpose |
+|---|---|---|
+| `get_program` / `latest_edition` | `dark_optimistic_oracle.aleo` | Edition 0. The generated candidate kept its program ID, mappings, records, transition inputs, and finalize input order. |
+| `get_program` / `latest_edition` | `doo_prediction_market.aleo` | Edition 0 before the market upgrade. The generated candidate preserved every edition-0 interface and added only `settlement_assertions`. |
+| `get_mapping_value` | Oracle `fee_collector[0u8]` | Returned the documented dedicated administrator. |
+| `get_mapping_value` | Oracle `assertions[187031922field]` | Returned the retained QA assertion before and after the attempts with identical fields. |
+| `get_mapping_value` | Market `markets[187031921field]`, collateral, supplies, and resolution | Returned the retained market, `300000u128` collateral, `200000u128` YES, `100000u128` NO, and `resolved = false`. |
+
+Leo 4.3.4 first produced an obsolete base-fee estimate and the network did not
+accept candidate `at184pml9xx44j82g3cz8um4sl4xfesj5lvlxqzyjnk07lyzv7nlcpswcph5e`.
+No accepted transaction or fee resulted. Leo 4.4.1 uses the active consensus
+V18 cost rules. Local compatibility checks also rejected an oracle initializer
+and a market settlement candidate whose finalize input order differed from
+edition 0; both were corrected before any broadcast or fee.
+
+### Oracle upgrade calls
+
+The final oracle candidate's public parameters were:
+
+- program: `dark_optimistic_oracle.aleo`;
+- existing edition: `0`;
+- administrator: the documented dedicated Testnet administrator;
+- combined circuit density: `3481397`;
+- minimum public fee if accepted: `29.406397` credits;
+- dependencies: canonical `token_registry.aleo` and `credits.aleo`.
+
+Consensus V18 gives the target block 75,000 deployment-density units per
+certificate, so this candidate needs at least 47 certificates. The following
+public deployment IDs reached validators but landed in lower-capacity blocks
+and were recorded in each block's `aborted_transaction_ids` list:
+
+| Candidate transaction ID | Block | Certificates | Result |
+|---|---:|---:|---|
+| `at1550we5h9nnd7sp7mc60n8u35v26m2cpkr7xn7pvmaxevx2ynpc8sp60srj` | 18742086 | 44 | Aborted; no fee or state change. |
+| `at1zs4syx646ggk44u5vgkqe74edtfyrf6rcmvrmx9qxe5cnv70ssqqz9hjdt` | 18742208 | 38 | Aborted; no fee or state change. |
+| `at197nejl2gj066r49nx4jhdunm86ckf7crahpf620y89cljc022vpqfsdwep` | 18742421 | 41 | Aborted; no fee or state change. |
+| `at1zfcprxyanh2hw3xmlafpjk3kh2e02mskctr6g3ruwxaukrhvqvqqu3gy8r` | 18742478 | 38 | Aborted; no fee or state change. |
+| `at1gxsl36z6zdnqyzq6zlrft5j03cas25gt9atwav8r8eawckt5jygs3veylj` | 18742531 | 39 | Aborted; no fee or state change. |
+| `at1rqrm39jdkccsgepe9qfmmncu6q6hmnsrn8c8f7ddqt6hj03gzy9sphrqex` | 18742557 | 34 | Aborted; no fee or state change. |
+| `at1e57gadlhwu9z7nkr4s4hhpml620rxrrqfywflf766ls3lah6gvxsawdg6q` | 18742799 | 36 | Aborted; no fee or state change. |
+| `at1ntx9xsdtg89sswyrdex4qa9gl2l2w2tqe5etm4mlny80jq3tdyrqdnd6p0` | 18743022 | 30 | Aborted; no fee or state change. |
+
+The first two rows used the earlier, slightly larger compatible candidate; the
+remaining rows used the final `3481397`-density candidate. Several other
+provider calls returned HTTP 522 before a candidate ID was returned. They did
+not produce an accepted or aborted ledger transaction and charged no fee.
+
+### Accepted prediction-market upgrade
+
+**Operation:** Upgrade `doo_prediction_market.aleo` from edition 0 to edition
+1 while leaving the oracle at edition 0.
+
+- Deployment transaction:
+  `at1gxza4mhcrendchvguswhyvjvq3ga5pc3wcl7948qvfgzs3g705yslssaal`
+- Fee transition:
+  `au1tr36sqgsqnu695pc2097trdv096fmm0hmehgql6lqlj00knyyspscsllzn`
+- Fee transaction:
+  `at14lfgnn4lwxgq2q6hwlxx4y6nlxqvgmytvyzjkepxsf89m9k4hsrq6g62yx`
+- Public fee: `12.687318` credits.
+- Accepted deployment edition embedded in the transaction: `1`.
+
+One official provider reported edition 1 immediately while another briefly
+reported edition 0; the accepted transaction itself embeds edition 1. After the
+upgrade, every retained market field and accounting mapping listed above was
+unchanged. `settlement_assertions[187031921field]` returned `null`, which is
+correct because that legacy QA market has not settled.
+
+### Final state
+
+Final local verification completed after the source and documentation changes:
+
+| Check | Result |
+|---|---|
+| Webapp lint, Vitest, TypeScript, production build | Passed; 14/14 tests. |
+| Prediction-market lint/static checks, Vitest, TypeScript, production build | Passed; 36/36 tests. |
+| Leo 4.4.1 core/oracle and market suites | Passed; 10/10 oracle and 13/13 market tests. |
+| Devnet, Testnet, and Mainnet deployment dry runs | Passed; no dry run signed or broadcast a transaction. |
+| Production and full dependency audits in both apps | Zero known vulnerabilities. |
+| Documentation production build | Passed. |
+
+- Oracle: edition 0; security upgrade is committed and tested but still awaits
+  a target block with sufficient certificate capacity.
+- Prediction market: accepted edition 1 with the settlement-binding and
+  distinct-claim fixes active.
+- Dedicated administrator public balance: `949027761u64` after the one
+  accepted `12.687318`-credit market fee. Oracle aborts did not reduce it.
+- Mainnet: no transaction was signed or broadcast.
+
+To retry the oracle safely, install Leo 4.4.1 and run
+`LEO_BIN=/path/to/leo-4.4.1 ./deploy_testnet.sh` from `core`. Confirm edition
+1 and the preserved mappings before attempting any later edition.
