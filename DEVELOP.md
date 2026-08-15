@@ -135,7 +135,7 @@ or commit repository files, so reviewed exports must still be appended and
 committed deliberately. The call inventory and retained evidence live in
 [LOG.md](LOG.md).
 
-`AGENTS.md` makes updating `LOG.md` a required completion step for future
-experiments, QA runs, deployments, and Aleo call sequences. It also defines the
-evidence fields and secret-redaction rules that future contributors and coding
-agents must follow.
+`AGENTS.md` makes updating, committing, and pushing `LOG.md` required completion
+steps for future experiments, QA runs, deployments, and Aleo call sequences. It
+also defines the evidence fields, secret-redaction rules, and explicit blocker
+reporting that future contributors and coding agents must follow.

@@ -56,7 +56,8 @@ app's **Download audit LOG.md** control to export exact JSON evidence with a
 plain-English explanation for each operation. The complete call inventory and
 retained QA record are in [LOG.md](LOG.md). Contributors and coding agents must
 follow [AGENTS.md](AGENTS.md) and commit the relevant log entries with every
-experiment or Aleo call sequence.
+experiment or Aleo call sequence. The log commit must also be pushed unless the
+user explicitly requests local-only work or the remote is unavailable.
 
 ## GitHub Pages
 
