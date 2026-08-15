@@ -298,3 +298,33 @@ harness. The entrypoints now use portable Bash and standard `grep`. The exact
 23-test contract suite passed in a clean Ubuntu 24.04 amd64 container without
 either command. The container mounted public source read-only, loaded no secret
 environment file, and made no signed or broadcast Aleo call.
+
+## 2026-08-15 09:32 EDT — Initialization upgrade-rule assessment
+
+**Purpose:** Determine whether Aleo prevents changes to a function named
+`initialize`, and distinguish that function from the immutable upgrade-policy
+constructor.
+
+Read-only Testnet calls confirmed oracle edition 0, fetched its public program,
+and confirmed the intended fee collector. The on-chain constructor and freshly
+compiled candidate constructor matched byte-for-byte. `initialize` retained
+zero inputs, one future output, and the same three finalize-input types; only
+its internal signer/caller checks changed. No Testnet proof, signature,
+transaction, broadcast, or fee occurred.
+
+A disposable local program then made the following Devnet calls using the
+generic local fixture account and non-economic Devnet credits:
+
+| Operation | Public parameters | Result |
+|---|---|---|
+| Deploy `init_upgrade_probe.aleo` edition 0 | Immutable administrator constructor; unrestricted `initialize` logic | Accepted as `at1kmvyghxp3ap534sjj4rkwf9eppmmuq2upjawa0y7nn4l2hjgtuzsyn36rq`. |
+| Upgrade the same program | Constructor unchanged; administrator signer/caller checks added inside `initialize`; interfaces unchanged | Accepted as edition 1 in `at1hwq2gmu4zj4000jfjzkgn5w4sskx5jmldt5v57sqq5yakva3ac8q43djuy`. |
+| Execute upgraded `initialize` | No user inputs; caller and signer were the public Devnet administrator | Accepted as `at1jxl4yk280d9yut0gawyqydsy4tustu6xx2zjnkc4w76wurx3tu9qrtapzg`; `initialized_by[0u8]` returned the expected administrator. |
+
+The existing local snarkOS 4.8.1 fixture ran consensus V17 while Leo 4.4.1
+warned that it expected V18. That is a local harness-version mismatch, not an
+upgrade rejection. The inspected active snarkVM 4.9 rule is the same: the
+special constructor is immutable, while compatible function/finalize logic is
+mutable. The real public blocker remains the oracle candidate's `3481397`
+combined density, which needs at least 47 certificates; attempted Testnet blocks
+provided only 30–44.
