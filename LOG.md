@@ -117,3 +117,50 @@ generated explanations and JSON, then append the relevant dated session to this
 checked-in file and commit it. The static site cannot commit to GitHub on the
 user's behalf. Preserve rejected and timed-out calls as well as accepted calls;
 never replace a `walletRequestId` with an assumed on-chain ID.
+
+## Security-audit experiment: 2026-08-15
+
+**What happened:** A fresh read-only audit checked the webapp source, wallet
+request construction, audit redaction, GitHub Pages workflow and response
+headers, dependency advisories, tests, production build, tracked history, and
+the Testnet oracle program used by this app. No wallet transaction was prepared,
+signed, or broadcast during this audit.
+
+The experiment ran from approximately `2026-08-15T10:09:00Z` through
+`2026-08-15T10:18:35Z`.
+
+### Local verification
+
+| Command or check | Result |
+|---|---|
+| `pnpm run lint` | Passed. |
+| `pnpm exec vitest run` | 11 of 11 browser/unit tests passed. Aleo entries printed by these tests used mocked providers and wallet IDs; they were not live calls. |
+| `pnpm run build` | Passed with Vite 8.0.12; the static bundle was produced without source maps or detected secret strings. |
+| `pnpm audit --prod` | No known production dependency vulnerabilities. |
+| `pnpm audit` | Reported 17 development-tool advisories: 1 critical, 10 high, 5 moderate, and 1 low. |
+| Current and history-aware tracked-secret scans | No Aleo private key, seed-phrase assignment, wallet-password assignment, or PEM private key was found. The ignored QA environment file remained mode `600`. |
+| GitHub Pages `HEAD` and index reads | Returned HTTP 200 and the current production asset hashes. HSTS was present; CSP, clickjacking protection, Referrer-Policy, Permissions-Policy, and `X-Content-Type-Options` were absent. |
+
+### Read-only Testnet oracle verification
+
+All reads used network `testnet` and endpoint
+`https://api.provable.com/v2`. They did not require a private key.
+
+1. `leo query program dark_optimistic_oracle.aleo -q` returned edition-0 Aleo
+   instructions. A whitespace-insensitive diff against the fresh local build
+   found only the intentional constructor administrator substitution:
+   `aleo1a2k4a9phy4kklx2ad0aed0lgvyzaegf0gfp85uldzhjzn8tt05zsjmfjnf`.
+2. `leo query program dark_optimistic_oracle.aleo --mapping-value fee_collector 0u8 -q`
+   returned the same administrator address. This confirms that the existing
+   Testnet deployment was initialized by the intended account.
+3. `leo query program token_registry.aleo --mapping-value registered_tokens
+   346688784394585735039324415800163929700021701423791533632764818774905958305field -q`
+   returned the DOOR registration. Its token administrator and authorization
+   party are the oracle program address
+   `aleo1nyflwg9mjfkfp2n9mtng0snxj9qrhahkjxp5l9pag4zxm3qrssrqwv8tml`, and its
+   retained supply was `999999900000000u128` of a
+   `10000000000000000u128` maximum.
+
+The audit found security issues that require remediation before Mainnet. This
+entry records the experiment and public network evidence; it is not a claim
+that the application is secure or an independent third-party audit.
