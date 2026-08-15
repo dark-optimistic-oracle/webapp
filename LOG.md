@@ -274,3 +274,20 @@ Final local verification completed after the source and documentation changes:
 To retry the oracle safely, install Leo 4.4.1 and run
 `LEO_BIN=/path/to/leo-4.4.1 ./deploy_testnet.sh` from `core`. Confirm edition
 1 and the preserved mappings before attempting any later edition.
+
+## 2026-08-15 09:08 EDT — Published Pages smoke tests
+
+GitHub Actions run `31884532950` completed successfully for webapp commit
+`284f9c4`; documentation run `31884534110` also completed successfully. The
+published oracle console and documentation were loaded in the integrated
+browser. Both documents completed loading with their expected navigation and
+content, the oracle console exposed the on-chain assertion loader and audit-log
+download, and Shield correctly remained disconnected. No browser warning or
+error was observed during that check.
+
+Prediction-market Actions run `31886243646` subsequently passed its complete
+frontend, security, 23-test Leo, three-network dry-build, production-build, and
+Pages-deployment gates. Its published page loaded the market, explanation, and
+documentation sections; public Testnet reads reported both programs available.
+No wallet was connected during any Pages smoke test, so no proof, signed
+transaction, submission, or fee occurred.
