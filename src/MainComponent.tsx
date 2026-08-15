@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -20,6 +20,13 @@ import {
   type AleoAuditCall,
 } from './aleoAudit';
 import { waitForWalletTransaction } from './aleoTransactionStatus';
+import {
+  literalValue,
+  normalizeRecord,
+  toField,
+  toU128,
+  toU32,
+} from './aleoLiterals';
 
 const DOO_PROGRAM_ID = 'dark_optimistic_oracle.aleo';
 const DEFAULT_ASSERTION_ID = '123';
@@ -33,6 +40,14 @@ const DEFAULT_AWARD = '1_010_000';
 const DEFAULT_ASSERTER_PAYOUT = '90_000_000';
 const DEFAULT_DISPUTER_PAYOUT = '190_000_000';
 const DEFAULT_TRANSACTION_FEE = 1_000_000;
+const MAX_BONDED_AMOUNT = 170141183460469231731687303715884105n;
+const PRIVATE_FEE_FUNCTIONS = new Set([
+  'new_voting_right',
+  'confirm',
+  'deny',
+  'collect_voting_award',
+  'refund_voting_right',
+]);
 const TESTNET_API_URL = import.meta.env.VITE_ALEO_API_URL ?? 'https://api.provable.com/v2';
 const OFFICIAL_TESTNET_APIS = [
   'https://api.provable.com/v2',
@@ -83,22 +98,6 @@ type LookupState =
   | { status: 'error'; message: string };
 
 type View = 'proposals' | 'create' | 'dispute' | 'vote' | 'settle';
-
-const toField = (value: string) => {
-  const trimmed = value.trim();
-  if (!trimmed) return '0field';
-  return trimmed.endsWith('field') ? trimmed : `${trimmed}field`;
-};
-
-const toU128 = (value: string) => {
-  const trimmed = value.trim();
-  return trimmed.endsWith('u128') ? trimmed : `${trimmed}u128`;
-};
-
-const toU32 = (value: string) => {
-  const trimmed = value.trim();
-  return trimmed.endsWith('u32') ? trimmed : `${trimmed}u32`;
-};
 
 const fetchTestnet = async (path: string, call: Omit<AleoAuditCall, 'kind' | 'network'>) => {
   const endpoints = OFFICIAL_TESTNET_APIS.includes(TESTNET_API_URL)
@@ -186,6 +185,9 @@ export default function MainComponent() {
   const [programAvailable, setProgramAvailable] = useState(import.meta.env.DEV);
   const [lookupId, setLookupId] = useState(DEFAULT_ASSERTION_ID);
   const [lookupState, setLookupState] = useState<LookupState>({ status: 'idle' });
+  const [currentHeight, setCurrentHeight] = useState<number | null>(null);
+  const [transactionPending, setTransactionPending] = useState(false);
+  const transactionPendingRef = useRef(false);
 
   useEffect(() => {
     const computeHash = async () => {
@@ -228,6 +230,7 @@ export default function MainComponent() {
       const currentHeight = Number(await heightResponse.json());
       if (!Number.isSafeInteger(currentHeight)) throw new Error('Testnet returned an invalid block height.');
 
+      setCurrentHeight(currentHeight);
       setDisputeDeadline(String(currentHeight + 10_000));
       setVotingDeadline(String(currentHeight + 20_000));
       setProgramAvailable(programResponse.ok);
@@ -297,30 +300,37 @@ export default function MainComponent() {
       setTxNotice({ type: 'error', message: 'The connected wallet does not expose transaction execution.' });
       return;
     }
+    if (transactionPendingRef.current) {
+      setTxNotice({ type: 'error', message: 'Wait for the pending wallet request before submitting another transaction.' });
+      return;
+    }
+
+    transactionPendingRef.current = true;
+    setTransactionPending(true);
 
     const request = {
       program: DOO_PROGRAM_ID,
       function: func,
       inputs,
       fee: DEFAULT_TRANSACTION_FEE,
-      privateFee: false,
+      privateFee: PRIVATE_FEE_FUNCTIONS.has(func),
     };
-    const auditInputs = await formatAleoAuditInputs(inputs, inputNames);
-    const audit = beginAleoCall({
-      kind: 'transaction',
-      network: 'testnet',
-      description: `Submit ${DOO_PROGRAM_ID}.${func}`,
-      program: DOO_PROGRAM_ID,
-      function: func,
-      parameters: {
-        caller: address,
-        inputs: auditInputs,
-        fee: request.fee,
-        privateFee: request.privateFee,
-      },
-    });
-
+    let audit: ReturnType<typeof beginAleoCall> | null = null;
     try {
+      const auditInputs = await formatAleoAuditInputs(inputs, inputNames);
+      audit = beginAleoCall({
+        kind: 'transaction',
+        network: 'testnet',
+        description: `Submit ${DOO_PROGRAM_ID}.${func}`,
+        program: DOO_PROGRAM_ID,
+        function: func,
+        parameters: {
+          caller: address,
+          inputs: auditInputs,
+          fee: request.fee,
+          privateFee: request.privateFee,
+        },
+      });
       const result = await executeWalletTransaction(request);
       const walletRequestId = result?.transactionId ?? null;
 
@@ -375,17 +385,45 @@ export default function MainComponent() {
         message: `${func} ${finalStatus.status}${finalStatus.error ? `: ${finalStatus.error}` : '.'}`,
       });
     } catch (error) {
-      failAleoCall(audit, error);
+      if (audit) failAleoCall(audit, error);
       setTxNotice({
         type: 'error',
         message: error instanceof Error ? error.message : `Unable to submit ${func}.`,
+      });
+    } finally {
+      transactionPendingRef.current = false;
+      setTransactionPending(false);
+    }
+  };
+
+  const submitTransaction = (
+    func: string,
+    buildInputs: () => string[],
+    inputNames: string[],
+  ) => {
+    try {
+      void executeTransaction(func, buildInputs(), inputNames);
+    } catch (error) {
+      setTxNotice({
+        type: 'error',
+        message: error instanceof Error ? error.message : `Invalid input for ${func}.`,
       });
     }
   };
 
   const submitAssertion = () =>
-    executeTransaction('create_assertion', [
-      `{
+    submitTransaction('create_assertion', () => {
+      const cost = literalValue(assertCost, 'u128');
+      const stake = literalValue(voterStake, 'u128');
+      const dispute = literalValue(disputeDeadline, 'u32');
+      const vote = literalValue(votingDeadline, 'u32');
+      if (cost < 10n || cost > MAX_BONDED_AMOUNT) throw new Error('Assertion bond is outside the contract range.');
+      if (stake < 100n || stake > MAX_BONDED_AMOUNT) throw new Error('Voter stake is outside the contract range.');
+      if (currentHeight !== null && dispute < BigInt(currentHeight) + 10n) {
+        throw new Error('Dispute deadline must be at least 10 blocks after the current block.');
+      }
+      if (vote < dispute + 10n) throw new Error('Voting deadline must be at least 10 blocks after the dispute deadline.');
+      return [`{
         id: ${toField(assertId)},
         title: ${toField(assertTitle)},
         content_hash: ${assertContent || DEFAULT_CONTENT_FIELD},
@@ -394,43 +432,48 @@ export default function MainComponent() {
         dispute_deadline_block_height: ${toU32(disputeDeadline)},
         voting_deadline_block_height: ${toU32(votingDeadline)}
       }`,
-    ], ['assertion']);
+      ];
+    }, ['assertion']);
 
-  const disputeAssertion = () => executeTransaction(
+  const disputeAssertion = () => submitTransaction(
     'dispute_assertion',
-    [toField(disputeId), toU128(assertCost)],
+    () => [toField(disputeId), toU128(assertCost)],
     ['assertion_id', 'assertion_cost'],
   );
 
   const buyVotingRight = () =>
-    executeTransaction(
+    submitTransaction(
       'new_voting_right',
-      [privatePaymentRecord, toField(votingRightId), toU128(voterStake)],
+      () => [normalizeRecord(privatePaymentRecord, 'Private DOOR payment record'), toField(votingRightId), toU128(voterStake)],
       ['payment', 'assertion_id', 'voter_stake'],
     );
 
   const voteOnAssertion = (supportsAssertion: boolean) =>
-    executeTransaction(supportsAssertion ? 'confirm' : 'deny', [votingRightRecord], ['voting_right']);
+    submitTransaction(
+      supportsAssertion ? 'confirm' : 'deny',
+      () => [normalizeRecord(votingRightRecord, 'Voting right record')],
+      ['voting_right'],
+    );
 
   const collectForRole = (
     role: 'collect_assertion_award' | 'collect_dispute_award' | 'collect_voting_award' | 'refund_voting_right'
   ) => {
     if (role === 'collect_voting_award') {
-      executeTransaction(role, [toU128(awardAmount), votingReceiptRecord], ['award_amount', 'voting_receipt']);
+      submitTransaction(role, () => [toU128(awardAmount), normalizeRecord(votingReceiptRecord, 'Voting receipt record')], ['award_amount', 'voting_receipt']);
       return;
     }
 
     if (role === 'refund_voting_right') {
-      executeTransaction(role, [toU128(voterStake), votingRightRecord], ['refund_amount', 'voting_right']);
+      submitTransaction(role, () => [toU128(voterStake), normalizeRecord(votingRightRecord, 'Voting right record')], ['refund_amount', 'voting_right']);
       return;
     }
 
     if (role === 'collect_assertion_award') {
-      executeTransaction(role, [toField(disputeId), toU128(asserterPayout)], ['assertion_id', 'payout_amount']);
+      submitTransaction(role, () => [toField(disputeId), toU128(asserterPayout)], ['assertion_id', 'payout_amount']);
       return;
     }
 
-    executeTransaction(role, [toField(disputeId), toU128(disputerPayout)], ['assertion_id', 'payout_amount']);
+    submitTransaction(role, () => [toField(disputeId), toU128(disputerPayout)], ['assertion_id', 'payout_amount']);
   };
 
   return (
@@ -613,7 +656,7 @@ export default function MainComponent() {
           </label>
           <button
             className="primary-action"
-            disabled={!connected || !programAvailable || !disputeDeadline.trim() || !votingDeadline.trim()}
+            disabled={!connected || !programAvailable || transactionPending || !disputeDeadline.trim() || !votingDeadline.trim()}
             onClick={submitAssertion}
             type="button"
           >
@@ -637,7 +680,7 @@ export default function MainComponent() {
             Dispute bond
             <input value={assertCost} onChange={(event) => setAssertCost(event.target.value)} />
           </label>
-          <button className="danger-action" disabled={!connected || !programAvailable} onClick={disputeAssertion} type="button">
+          <button className="danger-action" disabled={!connected || !programAvailable || transactionPending} onClick={disputeAssertion} type="button">
             <Gavel aria-hidden="true" size={18} />
             Dispute assertion
           </button>
@@ -648,7 +691,8 @@ export default function MainComponent() {
         <form className="action-panel" onSubmit={(event) => event.preventDefault()}>
           <div className="section-heading">
             <span className="eyebrow">Private voter action</span>
-            <h2>Buy a voting right and cast a hidden vote</h2>
+            <h2>Buy a voting right and cast a record-private vote</h2>
+            <p>The fee is private and record ownership stays hidden. The confirm/deny transition and aggregate tally remain public.</p>
           </div>
           <div className="form-grid">
             <label>
@@ -664,7 +708,7 @@ export default function MainComponent() {
             Private DOOR payment record
             <textarea rows={4} value={privatePaymentRecord} onChange={(event) => setPrivatePaymentRecord(event.target.value)} />
           </label>
-          <button className="secondary-action" disabled={!connected || !programAvailable} onClick={buyVotingRight} type="button">
+          <button className="secondary-action" disabled={!connected || !programAvailable || transactionPending} onClick={buyVotingRight} type="button">
             <KeyRound aria-hidden="true" size={18} />
             Buy voting right
           </button>
@@ -673,11 +717,11 @@ export default function MainComponent() {
             <textarea rows={4} value={votingRightRecord} onChange={(event) => setVotingRightRecord(event.target.value)} />
           </label>
           <div className="button-pair">
-            <button className="primary-action" disabled={!connected || !programAvailable} onClick={() => voteOnAssertion(true)} type="button">
+            <button className="primary-action" disabled={!connected || !programAvailable || transactionPending} onClick={() => voteOnAssertion(true)} type="button">
               <CheckCircle2 aria-hidden="true" size={18} />
               Confirm privately
             </button>
-            <button className="danger-action" disabled={!connected || !programAvailable} onClick={() => voteOnAssertion(false)} type="button">
+            <button className="danger-action" disabled={!connected || !programAvailable || transactionPending} onClick={() => voteOnAssertion(false)} type="button">
               <AlertTriangle aria-hidden="true" size={18} />
               Deny privately
             </button>
@@ -718,16 +762,16 @@ export default function MainComponent() {
             <textarea rows={3} value={votingRightRecord} onChange={(event) => setVotingRightRecord(event.target.value)} />
           </label>
           <div className="settlement-grid">
-            <button className="primary-action" disabled={!connected || !programAvailable} onClick={() => collectForRole('collect_assertion_award')} type="button">
+            <button className="primary-action" disabled={!connected || !programAvailable || transactionPending} onClick={() => collectForRole('collect_assertion_award')} type="button">
               Asserter collect
             </button>
-            <button className="secondary-action" disabled={!connected || !programAvailable} onClick={() => collectForRole('collect_dispute_award')} type="button">
+            <button className="secondary-action" disabled={!connected || !programAvailable || transactionPending} onClick={() => collectForRole('collect_dispute_award')} type="button">
               Disputer collect
             </button>
-            <button className="primary-action" disabled={!connected || !programAvailable} onClick={() => collectForRole('collect_voting_award')} type="button">
+            <button className="primary-action" disabled={!connected || !programAvailable || transactionPending} onClick={() => collectForRole('collect_voting_award')} type="button">
               Voter collect
             </button>
-            <button className="secondary-action" disabled={!connected || !programAvailable} onClick={() => collectForRole('refund_voting_right')} type="button">
+            <button className="secondary-action" disabled={!connected || !programAvailable || transactionPending} onClick={() => collectForRole('refund_voting_right')} type="button">
               Voter refund
             </button>
           </div>

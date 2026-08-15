@@ -81,7 +81,7 @@ describe('MainComponent', () => {
 
     fireEvent.click(screen.getByRole('tab', { name: /private vote/i }));
 
-    expect(screen.getByText('Buy a voting right and cast a hidden vote')).toBeInTheDocument();
+    expect(screen.getByText('Buy a voting right and cast a record-private vote')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /buy voting right/i })).toBeEnabled();
     expect(screen.getByRole('button', { name: /confirm privately/i })).toBeEnabled();
     expect(screen.getByRole('button', { name: /deny privately/i })).toBeEnabled();
@@ -128,6 +128,7 @@ describe('MainComponent', () => {
         sha256: expect.stringMatching(/^[0-9a-f]{64}$/),
       }),
     }));
+    expect(requestEntry.parameters.privateFee).toBe(true);
     consoleSpy.mockRestore();
   });
 
@@ -147,7 +148,7 @@ describe('MainComponent', () => {
         function: 'create_assertion',
         inputs: [
           expect.stringMatching(
-            /id: 777field,[\s\S]*title: 888field,[\s\S]*cost: 100_000_000u128,[\s\S]*voter_stake: 1_000_000u128,[\s\S]*dispute_deadline_block_height: 10000u32,[\s\S]*voting_deadline_block_height: 20000u32/
+            /id: 777field,[\s\S]*title: 888field,[\s\S]*cost: 100000000u128,[\s\S]*voter_stake: 1000000u128,[\s\S]*dispute_deadline_block_height: 10000u32,[\s\S]*voting_deadline_block_height: 20000u32/
           ),
         ],
         fee: 1_000_000,
@@ -229,10 +230,11 @@ describe('MainComponent', () => {
       expect(executeTransactionMock).toHaveBeenCalledWith(
         expect.objectContaining({
           function: 'dispute_assertion',
-          inputs: ['123field', '100_000_000u128'],
+          inputs: ['123field', '100000000u128'],
         })
       )
     );
+    await screen.findByText(/dispute_assertion accepted on testnet/i);
 
     fireEvent.click(screen.getByRole('tab', { name: /settle/i }));
     fireEvent.click(screen.getByRole('button', { name: /asserter collect/i }));
@@ -241,10 +243,11 @@ describe('MainComponent', () => {
       expect(executeTransactionMock).toHaveBeenLastCalledWith(
         expect.objectContaining({
           function: 'collect_assertion_award',
-          inputs: ['123field', '90_000_000u128'],
+          inputs: ['123field', '90000000u128'],
         })
       )
     );
+    await screen.findByText(/collect_assertion_award accepted on testnet/i);
 
     fireEvent.click(screen.getByRole('button', { name: /disputer collect/i }));
 
@@ -252,7 +255,7 @@ describe('MainComponent', () => {
       expect(executeTransactionMock).toHaveBeenLastCalledWith(
         expect.objectContaining({
           function: 'collect_dispute_award',
-          inputs: ['123field', '190_000_000u128'],
+          inputs: ['123field', '190000000u128'],
         })
       )
     );

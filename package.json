@@ -11,33 +11,38 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@provablehq/aleo-wallet-adaptor-core": "latest",
-    "@provablehq/aleo-wallet-adaptor-react": "latest",
-    "@provablehq/aleo-wallet-adaptor-react-ui": "latest",
-    "@provablehq/aleo-wallet-adaptor-shield": "latest",
-    "@provablehq/aleo-types": "latest",
-    "@provablehq/aleo-wallet-standard": "latest",
-    "@provablehq/sdk": "latest",
-    "lucide-react": "^0.300.0",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "@provablehq/aleo-wallet-adaptor-core": "1.0.1",
+    "@provablehq/aleo-wallet-adaptor-react": "1.0.1",
+    "@provablehq/aleo-wallet-adaptor-react-ui": "1.0.1",
+    "@provablehq/aleo-wallet-adaptor-shield": "1.0.1",
+    "@provablehq/aleo-types": "1.0.1",
+    "lucide-react": "0.300.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.0.0",
     "@testing-library/react": "^16.0.0",
-    "jsdom": "^24.0.0",
-    "vitest": "^2.0.0",
+    "jsdom": "30.0.1",
+    "vitest": "4.1.10",
     "@eslint/js": "^10.0.1",
     "@types/node": "^24.12.3",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
+    "@types/react": "18.3.24",
+    "@types/react-dom": "18.3.7",
+    "@vitejs/plugin-react": "6.0.5",
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
-    "vite": "^8.0.12"
+    "vite": "8.2.1"
+  },
+  "packageManager": "pnpm@10.14.0",
+  "pnpm": {
+    "overrides": {
+      "@babel/core": "7.29.6",
+      "brace-expansion": "5.0.9"
+    }
   }
 }

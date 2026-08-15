@@ -57,3 +57,33 @@ read-only Testnet verification. The associated calls and ordered evidence are in
 - Wallet extension internals, the Aleo network/prover, the canonical token
   registry, browser/OS compromise, and the core contract are external trust
   boundaries. Core findings are tracked separately in the core repository.
+
+## 2026-08-15 — Remediation verification
+
+Verification time: 2026-08-15 07:04 EDT (computer local time).
+
+### Fixes and dispositions
+
+| Finding | Disposition | Remediation and remaining risk |
+| --- | --- | --- |
+| WEB-2026-08-15-01 | Fixed | Wallet dependencies are pinned to stable 1.0.1 releases, React is aligned to the supported 18.3 line, unused direct Aleo packages were removed, and the lockfile is committed. |
+| WEB-2026-08-15-02 | Mitigated | Voting-right purchase, vote, voter-award, and unused-right-refund requests use private fees. UI text now states that record ownership and the fee payer are private while transition direction and aggregate tally remain public. |
+| WEB-2026-08-15-03 | Fixed | A synchronous ref plus rendered pending state rejects re-entry and disables every transaction button until the wallet request reaches a terminal result or timeout. Tests exercise sequential submission behavior. |
+| WEB-2026-08-15-04 | Fixed | A shared literal module accepts only canonical unsigned decimal Aleo literals, checks `field`/`u32`/`u128` ranges, bounds record size, and validates bond and deadline relationships before opening Shield. |
+| WEB-2026-08-15-05 | Fixed | GitHub Actions are pinned to full commit SHAs. Verification/build has read-only contents permission; Pages and OIDC writes exist only on the deployment job. The full dependency audit is a build gate. |
+| WEB-2026-08-15-06 | Partially fixed | The HTML now sets a restrictive document CSP and `no-referrer`. GitHub Pages cannot supply the complete response-header policy; origin isolation and response headers remain requirements for the final custom-domain front door. |
+| WEB-2026-08-15-07 | Accepted for QA | Readable public diagnostic evidence remains an intentional user-controlled feature. Private-record inputs and secret-like values remain summarized/redacted; users must inspect voluntary exports before sharing them. |
+| WEB-2026-08-15-08 | Fixed | Vitest, Vite, jsdom, Babel, and affected transitive packages were upgraded/overridden. Both `pnpm audit --prod` and the full `pnpm audit` report zero known vulnerabilities. |
+| WEB-2026-08-15-09 | Accepted limitation | The export is explicitly labeled client-generated evidence. It records network context and real accepted transaction IDs where available; independent chain verification remains mandatory. |
+
+### Verification
+
+- ESLint passed.
+- 14/14 Vitest tests passed.
+- TypeScript and the production GitHub Pages build passed.
+- Production and full dependency audits report zero known vulnerabilities.
+- The application still contains no operator private key; signing remains in
+  the connected wallet.
+
+This audit does not cover the Shield extension implementation, Aleo VM/prover,
+browser compromise, or the upgraded oracle's external dependencies.

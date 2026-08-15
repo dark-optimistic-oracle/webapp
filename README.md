@@ -13,8 +13,9 @@ Protocol purpose, lifecycle, privacy boundaries, architecture, and integration n
 - Shield wallet connection on Aleo testnet.
 - Public assertion lookup by known ID.
 - Assertion and dispute transactions.
-- Private voting-right, confirm, and deny transactions.
+- Record-private voting-right, confirm, and deny transactions with private fees.
 - Public and private settlement transactions.
+- Strict Aleo literal/range validation and duplicate-wallet-request prevention.
 - Fail-closed network and program availability checks.
 
 ## Development
@@ -32,7 +33,12 @@ For local Aleo devnet setup and sample records, follow `../core/README.md` and `
 pnpm run lint
 pnpm exec vitest run
 pnpm run build
+pnpm audit --prod
+pnpm audit
 ```
+
+The dated findings, dispositions, residual risks, and verification evidence are
+maintained in [AUDIT.md](AUDIT.md).
 
 ## Auditing Aleo calls
 
@@ -64,3 +70,5 @@ user explicitly requests local-only work or the remote is unavailable.
 The workflow in `.github/workflows/deploy-pages.yml` publishes from `main`. In repository Pages settings, select **GitHub Actions** as the source.
 
 The production build uses `/webapp/` as its Vite base path. A future custom domain can be attached through GitHub Pages without changing application routes.
+The document carries a restrictive CSP and no-referrer policy; complete HTTP
+security headers will require a header-capable custom-domain front door.

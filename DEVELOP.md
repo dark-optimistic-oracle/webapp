@@ -1,14 +1,16 @@
 # Development Process
 
-Last updated: 2026-07-27
+Last updated: 2026-08-15
 
 ## Current status
 
-The Vite/React client builds successfully, its six component tests pass, and it
+The Vite/React client builds successfully, its 14 tests pass, and it
 targets Aleo Testnet through `https://api.provable.com/v2`. It uses the
 Shield wallet adapter and the current `dark_optimistic_oracle.aleo` ABI.
 
-The public oracle is deployed and initialized at edition `0`. The shared
+The public oracle's original edition and 2026-08-15 security upgrade are tracked
+in the core repository's `DEPLOYMENTS.md` and this repository's `AUDIT.md` and
+`LOG.md`. The shared
 Testnet administrator and fee collector is
 `aleo1a2k4a9phy4kklx2ad0aed0lgvyzaegf0gfp85uldzhjzn8tt05zsjmfjnf`.
 Transactions remain disabled when neither official API provider can verify the
@@ -39,9 +41,14 @@ The workflow console contains:
 - Shield wallet connection status and transaction feedback.
 - Development-only account and record defaults from `../core/demo/README.md`.
 
-The app submits through `executeTransaction` from the Provable wallet adapter
+The app submits through `executeTransaction` from the pinned stable Provable wallet adapter
 to `dark_optimistic_oracle.aleo`. Form helpers normalize common Aleo scalar
 suffixes such as `field`, `u128`, and `u32`.
+
+Canonical unsigned parsing and range checks reject malformed `field`, `u32`,
+and `u128` values before opening the wallet. A synchronous pending lock prevents
+duplicate transaction prompts. Record-based voting operations request private
+fees; the transition name and aggregate tally remain public.
 
 The settlement forms call `collect_assertion_award` and
 `collect_dispute_award` with `(assertion_id, payout_amount)`, matching the
@@ -72,8 +79,12 @@ oracle-plus-market deployment is owned by `../predmkt/deploy_testnet.sh`.
 
 `.github/workflows/deploy-pages.yml` deploys the production app from `main`.
 The workflow installs locked dependencies, lints, tests, builds with
-`VITE_BASE_PATH=/webapp/`, uploads `dist`, and deploys through the
+`VITE_BASE_PATH=/webapp/`, audits all dependencies, uploads `dist`, and deploys through the
 `github-pages` environment. Jekyll is not used.
+
+Actions are pinned to full commit SHAs. Only the deployment job receives Pages
+and OIDC write permissions. The HTML sets a restrictive CSP and no-referrer
+policy; final response headers require the future custom-domain front door.
 
 Local development retains the `/` base path. The favicon uses Vite's
 `%BASE_URL%` replacement so it also resolves under the GitHub Pages repository
@@ -85,11 +96,14 @@ path.
 pnpm run lint
 pnpm exec vitest --run
 pnpm run build
+pnpm audit --prod
+pnpm audit
 ```
 
-The component suite covers public assertion lookup, private-vote navigation,
-Aleo input formatting, current dispute and settlement ABI calls, and the
-disconnected-wallet state. Vitest discovery is restricted to `src/**/*.test.*`
+The suite covers public assertion lookup, record-private vote navigation,
+strict Aleo input formatting and limits, private-fee selection, pending-request
+exclusion, current dispute and settlement ABI calls, and the disconnected-wallet
+state. Vitest discovery is restricted to `src/**/*.test.*`
 so ignored review/build artifacts under `temp/` cannot be mistaken for webapp
 tests.
 
