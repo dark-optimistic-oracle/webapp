@@ -10,8 +10,10 @@ Shield wallet adapter and the current `dark_optimistic_oracle.aleo` ABI.
 
 The public oracle's original edition and 2026-08-15 security upgrade are tracked
 in the core repository's `DEPLOYMENTS.md` and this repository's `AUDIT.md` and
-`LOG.md`. The shared
-Testnet administrator and fee collector is
+`LOG.md`. The audited upgrade is active as Testnet edition `1`, accepted in
+transaction
+`at1900gz2klm9we2deqarpv2fpqhnjqjr3cvr43stxq4525l6s9zupq6r0v5p`.
+The shared Testnet administrator and fee collector is
 `aleo1a2k4a9phy4kklx2ad0aed0lgvyzaegf0gfp85uldzhjzn8tt05zsjmfjnf`.
 Transactions remain disabled when neither official API provider can verify the
 program.

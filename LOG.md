@@ -328,3 +328,55 @@ special constructor is immutable, while compatible function/finalize logic is
 mutable. The real public blocker remains the oracle candidate's `3481397`
 combined density, which needs at least 47 certificates; attempted Testnet blocks
 provided only 30–44.
+
+## 2026-08-15 10:18 EDT — Accepted oracle edition-1 upgrade
+
+**Human-readable summary:** The committed security candidate was profiled
+without broadcasting, checked against the live edition-0 interface, and then
+submitted through the dedicated Testnet administrator. A live 60-block capacity
+sample contained three blocks with at least the required 47 certificates. The
+first controlled submission in this run landed in a 78-certificate block and
+was accepted. Existing oracle state was preserved and initialization was not
+repeated. No secret, private record, signature, or wallet credential is retained
+in this log.
+
+### Read-only profiling and preflight calls
+
+| Operation | Public parameters | Result and explanation |
+|---|---|---|
+| `get_program` / `latest_edition` | `dark_optimistic_oracle.aleo` | Loaded edition `0` and passed Leo's upgrade-interface check before transaction generation. |
+| Offline `leo upgrade --save` | Testnet, canonical `token_registry.aleo`, no broadcast | Generated the real candidate artifact with `3481397` combined density and a `29.406397`-credit accepted fee. A transient state-root read failed before one artifact was produced; no transaction ID, broadcast, or fee resulted. |
+| `get_block` capacity sample | 60 recent Testnet blocks | Certificate counts ranged from 35 to 82; three blocks had at least 47 certificates, proving that the candidate could fit without changing its interfaces or logic. |
+| Core unit suite | Leo 4.4.1 and local registry fixture | Passed all 10 tests. |
+
+### Accepted upgrade call
+
+| Field | Public value |
+|---|---|
+| Program | `dark_optimistic_oracle.aleo` |
+| Previous / accepted edition | `0` / `1` |
+| Deployment transaction | `at1900gz2klm9we2deqarpv2fpqhnjqjr3cvr43stxq4525l6s9zupq6r0v5p` |
+| Fee transition | `au1w9s7u95tn5h0lgn9gf5nvvwm4sh3gymjzpzprkvckfg2ypu2qq8q8ap0e4` |
+| Fee transaction | `at1ga3x8fmn9cc7e2p8r950cy4w3ncpz54ke6upmwh8r5kvu7g4jyqq8zmrag` |
+| Accepted block / certificates | `18745064` / `78` |
+| Combined deployment density | `3481397` |
+| Public fee | `29406397u64` (`29.406397` credits) |
+| Administrator balance | `949027761u64` before; `919621364u64` after |
+
+### Post-upgrade verification calls
+
+| Read | Result and purpose |
+|---|---|
+| `latest_edition` | Returned `1`. |
+| Accepted deployment body | Embedded edition `1`, the expected program ID, and the locally compiled instructions (formatting-normalized exact match). |
+| Deployed source | Contains the immutable documented constructor, signer and caller administrator guards in `initialize`, and the 10-block `new_voting_right` purchase cutoff. |
+| `fee_collector[0u8]` | Still `aleo1a2k4a9phy4kklx2ad0aed0lgvyzaegf0gfp85uldzhjzn8tt05zsjmfjnf`. |
+| `assertions[187031922field]` | Retained the exact QA assertion fields, costs, and deadlines. |
+| Related assertion mappings | Creation height `18703569u32`, documented QA asserter, no disputer, zero confirm votes, zero deny votes, and no claim flags—all unchanged. |
+
+The deployment script detected the existing initialized mapping and skipped
+`initialize`. This is important: an upgrade changes program logic but does not
+rerun application initialization or overwrite prior mappings.
+
+Final frontend verification passed ESLint, 14/14 Vitest tests, TypeScript, and
+the production Vite build. No wallet transaction was needed for these checks.

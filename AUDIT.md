@@ -108,3 +108,28 @@ the webapp must be treated as a QA interface to the earlier Testnet contract,
 not as evidence that the administrator and voting-cutoff fixes are active
 on-chain. Exact public call evidence and the preserved-state checks are recorded
 in `LOG.md`.
+
+## 2026-08-15 — Live remediation activation verification
+
+Verification time: 2026-08-15 10:18 EDT (computer local time).
+
+The exact audited oracle candidate was accepted as Testnet edition `1` in
+deployment transaction
+`at1900gz2klm9we2deqarpv2fpqhnjqjr3cvr43stxq4525l6s9zupq6r0v5p`.
+The transaction landed in block `18745064`, whose 78 certificates provide more
+than the 47-certificate minimum required by the candidate's `3481397` combined
+density. The public fee was `29.406397` credits; the administrator balance
+changed from `949027761u64` to `919621364u64`, exactly one accepted fee.
+
+Independent post-deployment reads confirmed edition `1`, the immutable
+constructor administrator, both signer and caller guards in `initialize`, and
+the 10-block voting-right purchase cutoff. The retained assertion
+`187031922field`, its creation height, asserter, empty disputer, and zero vote
+counts were unchanged, and the existing fee collector remained the documented
+administrator. Initialization was correctly skipped, so no token registration,
+treasury mint, or mapping was repeated.
+
+Frontend lint, all 14 Vitest tests, TypeScript, and the production Pages build
+passed against the unchanged public ABI. Findings fixed by the oracle upgrade
+are now active on Testnet; the previously documented governance, public vote
+direction/tally, and client-generated-log limitations remain.
