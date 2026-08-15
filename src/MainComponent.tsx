@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
+  Download,
   FileText,
   Gavel,
   KeyRound,
@@ -13,6 +14,7 @@ import { useWallet } from '@provablehq/aleo-wallet-adaptor-react';
 import {
   beginAleoCall,
   completeAleoCall,
+  downloadAleoAuditMarkdown,
   failAleoCall,
   formatAleoAuditInputs,
   type AleoAuditCall,
@@ -446,6 +448,14 @@ export default function MainComponent() {
           <span className="eyebrow">Wallet</span>
           <strong>{connected ? `${address?.slice(0, 12)}...${address?.slice(-6)}` : 'Shield not connected'}</strong>
         </div>
+      </div>
+
+      <div className="audit-export">
+        <span>Calls are retained locally with private records redacted.</span>
+        <button className="secondary-action" onClick={downloadAleoAuditMarkdown} type="button">
+          <Download aria-hidden="true" size={17} />
+          Download audit LOG.md
+        </button>
       </div>
 
       <div className="view-tabs" role="tablist" aria-label="Oracle views">

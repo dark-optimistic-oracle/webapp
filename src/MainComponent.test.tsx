@@ -38,6 +38,7 @@ describe('MainComponent', () => {
     expect(screen.getByRole('tab', { name: /proposals/i })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByText('Inspect an on-chain assertion')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /load assertion/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /download audit log\.md/i })).toBeEnabled();
     expect(screen.getByText(/voting rights, vote receipts, and voter awards are private records/i)).toBeInTheDocument();
   });
 

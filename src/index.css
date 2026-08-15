@@ -117,6 +117,16 @@ code {
   overflow-wrap: anywhere;
 }
 
+.audit-export {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  gap: 12px;
+  justify-content: space-between;
+}
+
 .eyebrow {
   color: var(--accent-strong);
   display: block;

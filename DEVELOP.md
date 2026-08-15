@@ -126,3 +126,11 @@ Provable can represent an absent mapping value as either HTTP 404 or a JSON
 `null` response with HTTP 200. The mapping reader treats both forms as missing
 state so an absent assertion or participant is never rendered as the literal
 string `"null"`.
+
+The audit writer automatically stores the latest 2,000 redacted entries under a
+webapp-specific `localStorage` key. `buildAleoAuditMarkdown` converts the journal
+to human-readable operation explanations followed by exact JSON, and the UI's
+**Download audit LOG.md** control downloads it. Static GitHub Pages cannot write
+or commit repository files, so reviewed exports must still be appended and
+committed deliberately. The call inventory and retained evidence live in
+[LOG.md](LOG.md).

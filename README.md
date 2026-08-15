@@ -51,6 +51,11 @@ audit records its input name, private-record classification, plaintext length,
 and SHA-256 fingerprint so an auditor can correlate calls without receiving a
 spendable record. Private keys are never available to or logged by the app.
 
+Every redacted entry is also retained automatically in browser storage. Use the
+app's **Download audit LOG.md** control to export exact JSON evidence with a
+plain-English explanation for each operation. The complete call inventory and
+retained QA record are in [LOG.md](LOG.md).
+
 ## GitHub Pages
 
 The workflow in `.github/workflows/deploy-pages.yml` publishes from `main`. In repository Pages settings, select **GitHub Actions** as the source.
