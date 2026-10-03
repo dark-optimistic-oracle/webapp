@@ -1,5 +1,15 @@
 # Development Process
 
+## 2026-10-03 — Screenshot demo instrumentation
+
+Added opt-in URL demo controls and initiating-step snapshots to the audit logger.
+Request/result JSON and Markdown carry matching run and step labels. Added a
+regression test for changing steps during an outstanding call. Lint, all 15
+unit tests, and production build passed. Patched vulnerable development/transitive
+dependencies without changing the pinned Aleo toolchain; `pnpm audit` reports
+no known vulnerabilities. Native Chrome/Shield control now works on m24 after
+the user enabled macOS permissions. Actual transaction capture remains pending.
+
 Last updated: 2026-08-15
 
 ## Current status

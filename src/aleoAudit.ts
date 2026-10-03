@@ -5,6 +5,7 @@ export type AleoAuditCall = {
   program?: string;
   function: string;
   parameters: Record<string, unknown>;
+  demo?: { run: string; step: string };
 };
 
 export type AleoAuditContext = {
@@ -26,6 +27,20 @@ export type AleoAuditEntry = AleoAuditCall & {
 
 let auditSequence = 0;
 let callSequence = 0;
+let demoStep: string | undefined;
+
+// Optional demo labels are public identifiers, never credentials or record inputs.
+export function getAleoDemoContext() {
+  const query = new URLSearchParams(window.location.search);
+  const run = query.get('demo');
+  const step = demoStep ?? query.get('demoStep') ?? 'DOO-01';
+  const label = /^[A-Za-z0-9_-]{1,64}$/;
+  return run && label.test(run) && label.test(step) ? { run, step } : undefined;
+}
+
+export function setAleoDemoStep(step: string) {
+  demoStep = step;
+}
 
 const AUDIT_STORAGE_KEY = 'dark-optimistic-oracle:webapp:aleo-audit:v1';
 const MAX_PERSISTED_ENTRIES = 2_000;
@@ -116,6 +131,7 @@ export function buildAleoAuditMarkdown() {
       `- Call ID: \`${entry.callId}\``,
       `- Program: \`${entry.program ?? 'network endpoint'}\``,
       `- Function: \`${entry.function}\``,
+      ...(entry.demo ? [`- Demo run: \`${entry.demo.run}\`; screenplay/calling-sequence step: \`${entry.demo.step}\``] : []),
       '',
       '```json',
       JSON.stringify(entry, null, 2),
@@ -182,6 +198,7 @@ export function beginAleoCall(call: AleoAuditCall): AleoAuditContext {
     callId: `aleo-call-${++callSequence}`,
     call: {
       ...call,
+      ...(getAleoDemoContext() ? { demo: getAleoDemoContext() } : {}),
       parameters: structuredClone(call.parameters),
     },
   };

@@ -20,6 +20,7 @@ import {
   type AleoAuditCall,
 } from './aleoAudit';
 import { waitForWalletTransaction } from './aleoTransactionStatus';
+import DemoAuditControl from './DemoAuditControl';
 import {
   literalValue,
   normalizeRecord,
@@ -478,6 +479,7 @@ export default function MainComponent() {
 
   return (
     <section className="oracle-console" aria-label="Dark Optimistic Oracle console">
+      <DemoAuditControl />
       <div className="status-strip">
         <div>
           <span className="eyebrow">Aleo testnet target</span>

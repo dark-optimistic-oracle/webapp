@@ -1,5 +1,21 @@
 # Aleo frontend call log
 
+## 2026-10-03 — Demo preparation (run demo-20261003)
+
+Purpose: capture actual frontend operations as labeled screenshots and preserve
+their ordered call evidence. The initial live page was opened and a wallet
+connection attempted; Shield was locked. No transaction was submitted or
+accepted during this preparation. macOS initially blocked native wallet access;
+after the user granted permissions, Shield unlocked successfully on m24 using
+the existing testing-machine credential. No credential is included here.
+
+The initial overview screenshot is provisional: it is not evidence of a
+transaction. Browser startup reads will be preserved from the exported journal
+during capture, rather than reconstructed from memory. Added step-tagged logs
+and tested request/result step preservation: 15 unit tests, lint, build passed;
+dependency audit has no known vulnerabilities. Planned calls are listed in
+`demo-slideshow/CALLING_SEQUENCE.md`; planned is not executed.
+
 Last updated: 2026-08-15.
 
 This file is the durable audit reference for Aleo calls initiated by the Dark

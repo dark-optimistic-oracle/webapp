@@ -67,6 +67,15 @@ user explicitly requests local-only work or the remote is unavailable.
 
 ## GitHub Pages
 
+### Screenshot demos and step-tagged logs
+
+Open the app with `?demo=demo-20261003` to show the demo audit controls.
+Set **Demo step** before each action. The request and its later result retain
+that label, even if the operator changes steps while waiting. Use **Download
+audit LOG.md** to preserve the journal; **View demo audit log** shows identical
+Markdown for inspection. Never include private records in slides. See
+[the screenplay](demo-slideshow/DEMO_SCREENPLAY.md).
+
 The workflow in `.github/workflows/deploy-pages.yml` publishes from `main`. In repository Pages settings, select **GitHub Actions** as the source.
 
 The production build uses `/webapp/` as its Vite base path. A future custom domain can be attached through GitHub Pages without changing application routes.
