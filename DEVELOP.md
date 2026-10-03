@@ -205,3 +205,14 @@ right refund using Shield on Testnet. Imported the final exact browser journal,
 extended the slideshow to 16 pages, and documented the bond mismatch/recovery.
 Visible creation bond and public payout controls were regression-tested before
 publication. Record plaintext is never retained in public evidence.
+# 2026-10-03 - Shared pnpm store migration
+
+Merged the repository-local cache into the existing per-user macOS store with
+rsync (without deleting destination contents), then recreated node_modules
+against that store using the frozen lockfile. A plain install initially selected
+the local store again, so configured store-dir in the user's global pnpm config
+and repeated installation. pnpm's global bin directory needed to be included
+in PATH for that configuration command. No absolute machine path was committed
+as repository configuration. The local cache is ignored as a fallback precaution.
+Verified store selection, dependency metadata, lint, all 18 tests and production
+build before removing the duplicate cache. See LOG.md for the local QA record.

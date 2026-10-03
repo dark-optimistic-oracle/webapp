@@ -17500,3 +17500,26 @@ payout; 10% was retained as its protocol fee. No secret record was filmed.
 Submission endpoint is Shield-managed and not exposed, not assumed equal to
 the public read API. Unit/build checks and PDF visual QA are local operations,
 not additional Aleo calls.
+# Local dependency migration QA - 2026-10-03
+
+Purpose: migrate webapp's .pnpm-store cache to the shared user store and verify
+the frontend still rebuilds. No browser interaction or Aleo read/transaction
+was performed; no network, program, function, wallet or chain ID applies.
+
+Ordered operations:
+
+1. Inspected pnpm 10.14.0 configuration and installed dependency store metadata.
+2. Merged cache files into the existing shared store with rsync, preserving
+   destination contents; reinstalled with a frozen lockfile and explicit store.
+3. Lint, 18 tests and production build passed, but the plain store-path command
+   still selected a local store. A normal install confirmed this recurrence.
+4. The first global configuration attempt failed because pnpm's global bin
+   directory was absent from PATH; retried with that existing directory on PATH.
+5. Configured the per-user shared store globally and repeated the frozen-lockfile
+   reinstall. All 276 packages were reused from the shared store, none downloaded.
+6. Repeated lint, 18 tests, production build and checked both pnpm store path and
+   node_modules metadata for the shared store. Removed only migrated duplicate
+   caches after successful verification; their contents remain in the shared store.
+
+No dependency versions or lockfile were intentionally changed. README.md and
+DEVELOP.md document store usage and recovery of the initially recurring cache.

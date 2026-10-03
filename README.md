@@ -113,3 +113,10 @@ calling sequence accompany them; LOG.md retains browser evidence. Private
 inputs are redacted and cleared before screenshots. One controlled QA account
 plays multiple roles; this is a functional demonstration, not decentralization
 proof. See the calling sequence for unclaimed receipts and the recovered bond.
+# Dependency cache
+
+Use the shared per-user pnpm store rather than a repository-local cache.
+On macOS its normal location is `~/Library/pnpm/store`. Run
+`pnpm install --frozen-lockfile` for normal setup and `pnpm store path` to
+confirm the selected store. Dependency caches and `node_modules` are not
+committed. No machine-specific absolute store path is required in this repo.
