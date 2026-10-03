@@ -21,6 +21,8 @@ import {
 } from './aleoAudit';
 import { waitForWalletTransaction } from './aleoTransactionStatus';
 import DemoAuditControl from './DemoAuditControl';
+import DemoWalletTools from './DemoWalletTools';
+import { demoQaFee } from './demoQa';
 import {
   literalValue,
   normalizeRecord,
@@ -313,7 +315,7 @@ export default function MainComponent() {
       program: DOO_PROGRAM_ID,
       function: func,
       inputs,
-      fee: DEFAULT_TRANSACTION_FEE,
+      fee: demoQaFee(DEFAULT_TRANSACTION_FEE),
       privateFee: PRIVATE_FEE_FUNCTIONS.has(func),
     };
     let audit: ReturnType<typeof beginAleoCall> | null = null;
@@ -480,6 +482,14 @@ export default function MainComponent() {
   return (
     <section className="oracle-console" aria-label="Dark Optimistic Oracle console">
       <DemoAuditControl />
+      <DemoWalletTools disabled={transactionPending} onBusyChange={busy => {
+        transactionPendingRef.current = busy;
+        setTransactionPending(busy);
+      }} onRecord={(target, record) => {
+        if (target === 'payment') setPrivatePaymentRecord(record);
+        else if (target === 'receipt') setVotingReceiptRecord(record);
+        else setVotingRightRecord(record);
+      }} />
       <div className="status-strip">
         <div>
           <span className="eyebrow">Aleo testnet target</span>

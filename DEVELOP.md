@@ -1,5 +1,15 @@
 # Development Process
 
+## 2026-10-03 — Authorized private QA preparation
+
+The user authorized further private-branch testing within 10 Testnet ALEO.
+Added separately opt-in demoTools=1 controls for self-funding 1000 private DOOR
+units and 3 private fee ALEO, wallet record lookup and in-memory form population.
+Only counts/public parameters are logged. Both helpers and ordinary executions
+share the pending-request lock. Demo-tools priority fees are 10000 microcredits;
+ordinary fees are unchanged. Added tests for opt-in gating and secret-free
+selection labels. No private preparation call has yet been made at this checkpoint.
+
 ## 2026-10-03 — Screenshot demo instrumentation
 
 Public-path checkpoint: actual assertion creation and undisputed collection

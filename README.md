@@ -82,6 +82,14 @@ steps from executed evidence. Import a reviewed browser export with
 `node demo-slideshow/import_audit_log.mjs EXPORT.md LOG.md`; duplicate imports
 are detected by digest. Review the result, then commit and push LOG.md.
 
+Private QA preparation requires the additional explicit `&demoTools=1` URL
+flag. Its controls can transfer 1000 DOOR units and 3 Testnet ALEO **to the
+connected wallet itself**, then load unspent records through Shield and place
+a selected record into the existing form. Every transfer requires wallet approval.
+Record plaintext stays in memory and form fields, not audit exports; clear those
+inputs before capture. This mode uses a 10000-microcredit optional priority fee
+instead of the normal 1000000; Shield displays the full network fee.
+
 The workflow in `.github/workflows/deploy-pages.yml` publishes from `main`. In repository Pages settings, select **GitHub Actions** as the source.
 
 The production build uses `/webapp/` as its Vite base path. A future custom domain can be attached through GitHub Pages without changing application routes.

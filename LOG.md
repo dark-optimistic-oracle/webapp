@@ -1,5 +1,13 @@
 # Aleo frontend call log
 
+## 2026-10-03 — Private QA preparation controls
+
+User authorization: prepare private records and continue, within an additional
+10-Testnet-ALEO budget. Implemented explicitly opt-in self-funding/record tools
+and smaller optional priority fees for that bounded run. Plaintext is never
+persisted or logged by the helper. Record reads log only counts. No preparation
+transaction is claimed before the actual wallet operation is captured below.
+
 ## 2026-10-03 — Public screenshot-demo checkpoint
 
 The public Oracle branch executed from the published GitHub Pages frontend.
