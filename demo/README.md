@@ -58,8 +58,8 @@ and denied-assertion disputer payout. Registry and credits calls prepare private
 DOOR and fee records. Assertion 2026100306 confirmed; the Verity-linked assertion
 2026100305 had 1 confirm and 2 deny votes and was rejected after voting closed.
 For the market settlement using that rejection, see
-[the companion guide](../../predmkt/demo-slideshow/README.md) in the sibling checkout
-or [the predmkt repository](https://github.com/dark-optimistic-oracle/predmkt/tree/main/demo-slideshow).
+[the companion guide](../../predmkt/demo/README.md) in the sibling checkout
+or [the predmkt repository](https://github.com/dark-optimistic-oracle/predmkt/tree/main/demo).
 
 The mismatched dispute for assertion 2026100302 was rejected, not successful.
 Its creation used an unintended 100000000-unit bond; the UI was fixed to expose

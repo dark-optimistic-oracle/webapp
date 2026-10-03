@@ -216,3 +216,9 @@ in PATH for that configuration command. No absolute machine path was committed
 as repository configuration. The local cache is ignored as a fallback precaution.
 Verified store selection, dependency metadata, lint, all 18 tests and production
 build before removing the duplicate cache. See LOG.md for the local QA record.
+# 2026-10-03 - Demo folder naming
+
+Renamed demo-slideshow to demo, preserving screenshots, PDF, HTML, screenplay,
+calling sequence and exports. Updated root reviewer/deployed-app links and
+cross-repository guide links. Historical LOG.md paths describe their original
+location; use demo/ now. Import command is node demo/import_audit_log.mjs.

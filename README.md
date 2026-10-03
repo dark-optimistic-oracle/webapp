@@ -3,7 +3,8 @@
 Transaction console for `dark_optimistic_oracle.aleo` on Aleo testnet.
 
 - Website: https://dark-optimistic-oracle.github.io/website/
-- App: https://dark-optimistic-oracle.github.io/webapp/
+- App: [deployed Oracle frontend](https://dark-optimistic-oracle.github.io/webapp/)
+- Demo: [viewing instructions and blockchain evidence](demo/README.md)
 - Documentation: https://dark-optimistic-oracle.github.io/webdocs/
 
 Protocol purpose, lifecycle, privacy boundaries, architecture, and integration notes live in the [documentation repository](https://github.com/dark-optimistic-oracle/webdocs).
@@ -74,12 +75,12 @@ Set **Demo step** before each action. The request and its later result retain
 that label, even if the operator changes steps while waiting. Use **Download
 audit LOG.md** to preserve the journal; **View demo audit log** shows identical
 Markdown for inspection. Never include private records in slides. See
-[the screenplay](demo-slideshow/DEMO_SCREENPLAY.md).
+[the screenplay](demo/DEMO_SCREENPLAY.md).
 
 The demo folder also contains numbered screenshots, `slides.json`, an HTML
 slideshow (`index.html`) and `DEMO_SLIDESHOW.pdf`. Captions distinguish planned
 steps from executed evidence. Import a reviewed browser export with
-`node demo-slideshow/import_audit_log.mjs EXPORT.md LOG.md`; duplicate imports
+`node demo/import_audit_log.mjs EXPORT.md LOG.md`; duplicate imports
 are detected by digest. Review the result, then commit and push LOG.md.
 
 Private QA preparation requires the additional explicit `&demoTools=1` URL
@@ -107,7 +108,7 @@ amount fields do not set the bond. Verify the bond and deadlines in Shield's
 advanced transaction details before approving.
 # Actual Testnet demo capture
 
-The 16-slide `demo-slideshow/index.html` and PDF include public assertions,
+The 16-slide `demo/index.html` and PDF include public assertions,
 private voting, rewards, a refund and disputed payout. Screenplay and exact
 calling sequence accompany them; LOG.md retains browser evidence. Private
 inputs are redacted and cleared before screenshots. One controlled QA account

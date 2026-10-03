@@ -17523,3 +17523,11 @@ Ordered operations:
 
 No dependency versions or lockfile were intentionally changed. README.md and
 DEVELOP.md document store usage and recovery of the initially recurring cache.
+# Demo directory rename QA - 2026-10-03
+
+Renamed demo-slideshow to demo and updated active README links and importer
+instructions. Verified all 16 manifest screenshots, HTML image paths and both
+root/demo README relative links exist. Lint, 18 tests and production build
+passed. PDF and screenshots were moved unchanged, not regenerated. Historical
+export contents and original paths were preserved as evidence. No Aleo calls
+or wallet requests were made during this local verification.
