@@ -133,3 +133,13 @@ Frontend lint, all 14 Vitest tests, TypeScript, and the production Pages build
 passed against the unchanged public ABI. Findings fixed by the oracle upgrade
 are now active on Testnet; the previously documented governance, public vote
 direction/tally, and client-generated-log limitations remain.
+# QA follow-up — 2026-10-03
+
+Live Testnet demo testing found an operational safety issue, not a bypass of
+contract validation: Create omitted its bond input, leaving a shared hidden
+100,000,000-unit default. A smaller dispute was correctly rejected. Fixed by
+exposing Assertion bond in Create and both public payout amounts in Settle.
+Regression tests verify the selected bond and settlement payout reach the
+wallet request. No contract upgrade or existing on-chain state mutation was
+needed. The original assertion's 90% undisputed payout was collected normally;
+its 10% DOOR protocol fee remains collected. See LOG.md for exact call evidence.

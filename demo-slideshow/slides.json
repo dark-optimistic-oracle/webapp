@@ -15,5 +15,8 @@
     {"file":"slide11.jpg","step":"DOO-PREP-01 / DOO-PREP-02 / DOO-PREP-03","caption":"Accepted self-transfers prepared 1000 private DOOR units and 3 private Testnet ALEO. Shield returned one usable registry record; only its availability and schema are shown, not plaintext."},
     {"file":"slide12.png","step":"DOO-10","caption":"Shield reviewed new_voting_right for assertion 2026100306 with a 100-unit DOOR stake and private fees. The accepted transaction is at1zlufr8rt4we9qvdvqwsq9h0kg6vgyaeupp0ulyu984nffn3jqgpqr86mn4. Private form inputs were cleared before capture."},
     {"file":"slide13.jpg","step":"DOO-11","caption":"After consuming the private voting right with confirm, public mapping readback shows 1 confirm and 0 deny votes. The 1000-unit assertion bond and 100-unit voter stake are visible; voter record plaintext is not."}
+    ,{"file":"slide14.png","step":"DOO-13","caption":"Shield review of collect_voting_award after voting closed. The confirming voter received 101 DOOR units; acceptance and exact public parameters are preserved in LOG.md. Private receipt plaintext is not displayed."}
+    ,{"file":"slide15.jpg","step":"DOO-16-tally","caption":"Oracle readback for Verity assertion 2026100305: 1 confirm and 2 deny votes. The reported NO assertion loses. All roles use one QA account; this tests mechanics, not independent consensus."}
+    ,{"file":"slide16.jpg","step":"DOO-17-disputer","caption":"The disputer collected 1900 DOOR units after the denied assertion's deadline. The accepted transaction ID is visible. Earlier confirming-voter awards, asserter payout and unused-right refund are recorded in the calling sequence."}
   ]
 }

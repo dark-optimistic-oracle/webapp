@@ -57,10 +57,10 @@ read returned 20136410 before award collection, past the 20136400 grace end.
 Claim hash: `1967197542655213185970768287057963230030743952149426568688518505609222478009field`.
 
 Private voting was subsequently captured for fresh assertion 2026100306.
-Disputed awards and unused-right refunds are not captured yet.
+Disputed awards and an unused-right refund were subsequently accepted (below).
 The user confirmed no prepared private records, then authorized preparation
 and execution within an additional 10-Testnet-ALEO budget. Preserve these as
-pending steps, not as successful or failed transactions.
+historical checkpoint steps; accepted completion is recorded below.
 
 ## Private preparation and voting capture, 2026-10-03
 
@@ -90,7 +90,33 @@ capture and are represented only by fingerprints in the audit journal.
    and the confirm transition. Public readback shows confirm=1 and deny=0.
 8. DOO-12: a second `new_voting_right` using the private change record accepted
    as `at1qf8gkdvg3thzspdcfsfep647n0fvggwq2pv927atp2mnk6qpucxs4d434s`.
-   This right remains unused for the refund demonstration after voting closes.
+   This right was left unused until its refund after voting closed.
+
+## Accepted completion, 2026-10-03
+
+All calls below target `dark_optimistic_oracle.aleo` on Testnet, through Shield.
+The adapter does not expose its submission endpoint. Public read endpoints and
+full wallet request IDs are in the exact browser exports imported into LOG.md.
+Private inputs are fingerprinted, never published as plaintext.
+
+| Step | Operation and result | Accepted transaction |
+| --- | --- | --- |
+| DOO-RECOVERY-01 | Recover 90000000 DOOR from undisputed assertion 2026100302; the 10000000-unit protocol fee is not recoverable | `at1fnypqe5thl7mugwn6n6tetz3kwcq467lw4n4hm333a0ansh0pvzswgmxxl` |
+| DOO-13 | Confirming receipt award 101 DOOR for 2026100306 | `at1zs9320qx7fk7xdh76j2hljpy2r3q9etls2pxlx2t0wl02pld2cpqdl5unr` |
+| DOO-14 | Asserter payout 1900 DOOR for 2026100306 | `at1dacpqzgrd9phzwnf2292fv0d8lx9ghpgmjd8c899pvgt5wtjqq9q8x6f3x` |
+| DOO-15 | Unused private voting-right refund 100 DOOR | `at1qqahg3f5uezlrgjvftqn93zwyuqqlfwdwftxm4ffsfhly98jusyqf7juqz` |
+| DOO-16-right | Private right, 100 DOOR, for Verity assertion 2026100305 | `at1c2gafx0tlzs5cf48px9gn2e9gengm0rar94dx7f53zjrnle8fufqcjy56h` |
+| DOO-16-deny | Deny the reported NO assertion using that right | `at18863kgtdk6kfa8nv4uqx6s2yu4dguv9urpqxk8hhnr5wh0fudyys7jylk6` |
+| DOO-17-voter | First winning denying receipt award, 101 DOOR | `at140v8wdqe0tg57fmxy9fx64uf7dsvxu6nxmea8vfzeu29krmp0qfqnkpqjv` |
+| DOO-17-disputer | Disputer payout 1900 DOOR for 2026100305 | `at1lzyxezrhe2qllh7xtk0qrz5ccqraj6c8eafppy3z0l7gthlcjsysxrfttx` |
+
+The independent confirming-receipt claim for 2026100305 was not attempted:
+it lost the 1-confirm/2-deny vote. A second winning denying receipt remains
+unclaimed. Neither is fabricated as a successful claim. All roles use the
+same controlled QA account; this demonstration is not a consensus audit.
+Slides 14-16 show wallet review, denied tally, and accepted disputer payout.
+Explorer transaction URLs use `https://testnet.explorer.provable.com/transaction/`
+followed by the exact transaction ID above.
 
 Full wallet IDs, exact public inputs, record fingerprints, and request/response
 order are preserved in the browser journal imported into root LOG.md.

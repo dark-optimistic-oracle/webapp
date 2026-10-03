@@ -82,3 +82,13 @@ or standalone verifier button. Initialization already happened and must not be
 replayed. Verifier integration is demonstrated by Verity's settlement call.
 Those administrator and integration functions belong in the calling-sequence
 explanation, not invented frontend clicks.
+# Recorded private completion
+
+Slides 14-16 extend the earlier capture: DOO-13 voter award review,
+DOO-16-tally denied Verity assertion, and DOO-17-disputer accepted payout.
+In Settle, enter the assertion ID and explicit public payout, then click the
+corresponding Collect button. For private awards/refunds, load the eligible
+receipt/right via QA preparation, use it in the form, submit, and clear the
+private input before filming. DOO-15's refund was accepted but has no dedicated
+result screenshot; its evidence is the audit journal and chain transaction.
+See CALLING_SEQUENCE.md for exact IDs and operations actually executed.

@@ -105,3 +105,11 @@ The Create tab shows **Assertion bond** explicitly. This is the DOOR amount burn
 when creating an assertion; a dispute must post exactly the same bond. Payout
 amount fields do not set the bond. Verify the bond and deadlines in Shield's
 advanced transaction details before approving.
+# Actual Testnet demo capture
+
+The 16-slide `demo-slideshow/index.html` and PDF include public assertions,
+private voting, rewards, a refund and disputed payout. Screenplay and exact
+calling sequence accompany them; LOG.md retains browser evidence. Private
+inputs are redacted and cleared before screenshots. One controlled QA account
+plays multiple roles; this is a functional demonstration, not decentralization
+proof. See the calling sequence for unclaimed receipts and the recovered bond.

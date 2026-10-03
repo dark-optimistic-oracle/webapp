@@ -198,3 +198,10 @@ the contract's exact-bond check. Added a visible Assertion bond control to Creat
 and changed the transaction-formatting regression test to assert its selected
 1,000-unit value. Lint, all 17 unit tests, and the production build passed.
 The rejected request and recovery sequence are preserved in LOG.md.
+# 2026-10-03 - Private demo completion
+
+Captured accepted confirming and denying votes, voter/public awards and unused
+right refund using Shield on Testnet. Imported the final exact browser journal,
+extended the slideshow to 16 pages, and documented the bond mismatch/recovery.
+Visible creation bond and public payout controls were regression-tested before
+publication. Record plaintext is never retained in public evidence.
