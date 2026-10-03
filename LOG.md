@@ -380,3 +380,64 @@ rerun application initialization or overwrite prior mappings.
 
 Final frontend verification passed ESLint, 14/14 Vitest tests, TypeScript, and
 the production Vite build. No wallet transaction was needed for these checks.
+
+## 2026-10-02 22:49 EDT — Aleo Testnet and development-tool version audit
+
+**Purpose:** Check whether the repository's pinned Aleo tools, the local
+developer tools, the public Testnet protocol, the wallet integration, and the
+general frontend toolchain have newer releases. This was a read-only audit. It
+did not generate a proof or signature, connect a wallet, submit a transaction,
+spend a fee, deploy or upgrade a program, or change any on-chain state.
+
+### Ordered read-only operations
+
+1. Read local executable versions and repository pins. The default machine
+   executables reported Leo `4.3.4` and a snarkOS commit corresponding to
+   `3.7.1`; the repository's Leo-managed Devnet binary reported snarkOS
+   `4.8.1`. Contract manifests, scripts, and CI in the oracle and prediction
+   market repositories pin Leo `4.4.1`. The machine also reported Node
+   `24.21.0`, pnpm `10.14.0`, and Rust `1.97.1`.
+2. Read the official ProvableHQ GitHub release metadata for Leo, snarkOS,
+   snarkVM, the Provable SDK, and the Aleo developer toolkit. No GitHub write
+   API was called. The newest released Leo compiler was `4.4.4`; official
+   Testnet snarkOS and snarkVM `4.11.0` releases were published for consensus
+   V21; and SDK `0.12.0` added V21/Varuna V3 support. Leo's unreleased main
+   branch identifies `4.4.5` with snarkVM/snarkOS `4.11.0`, but there was no
+   corresponding released `leo-lang` tag at the time of this check.
+3. Queried the public Testnet height from both
+   `https://api.provable.com/v2/testnet/block/height/latest` and
+   `https://api.explorer.provable.com/v1/testnet/block/height/latest`. Both
+   returned block `20132974`. The official snarkOS Testnet `4.11.0` release
+   schedules consensus V21 for block `20234000`, leaving `101026` blocks at
+   the observed height. The same endpoint family reported
+   `token_registry.aleo` edition `1`.
+4. Read official npm registry metadata for the installed wallet packages and
+   ran pnpm's read-only outdated-package report. The installed
+   `@provablehq/aleo-wallet-adaptor-*` packages remain at `1.0.1` but are
+   deprecated; the supported package family is now spelled `adapter`, with
+   newer core, React, UI, Shield, and wallet-standard releases. The report also
+   found optional frontend updates, including major-version changes to React,
+   TypeScript, Vitest, pnpm, and other packages.
+5. Read the official Node.js release index. Local Node `24.21.0` was the current
+   Node 24 LTS release, so no Node runtime update was indicated.
+
+### Result and interpretation
+
+The Aleo-specific toolchain is materially behind. Leo `4.4.4` is the current
+released compiler and uses snarkVM `4.10.0` rules for the active V20 network,
+while Testnet node operators need `testnet-v4.11.0` before the announced V21
+activation. The repository should first move from Leo `4.4.1` to released Leo
+`4.4.4` and migrate the deprecated wallet `adaptor` packages to the current
+`adapter` family, with regression and Devnet testing. A second compatibility
+update will be required when a released Leo compiler carrying snarkVM `4.11.0`
+becomes available; unreleased Leo source should not silently replace the pinned
+production toolchain. Broad React, TypeScript, Vitest, and pnpm major upgrades
+should be tested separately rather than combined with the time-sensitive Aleo
+compatibility work.
+
+The hosted GitHub Pages frontend does not itself run a snarkOS node, so an old
+local node binary does not by itself take the published site offline. However,
+deployment/proof tooling, a locally operated node, and the user's wallet must
+be compatible with the activated protocol to produce and submit new
+transactions. Existing deployed programs and their mappings are not erased by
+the network-version activation.
