@@ -97,6 +97,10 @@ The document carries a restrictive CSP and no-referrer policy; complete HTTP
 security headers will require a header-capable custom-domain front door.
 # Assertion bond visibility
 
+The Settle tab also exposes both public payout amounts. Choose the amount for
+the actual resolution branch before collecting; do not rely on a value left in
+another tab. **Close audit preview** hides the journal without erasing it.
+
 The Create tab shows **Assertion bond** explicitly. This is the DOOR amount burned
 when creating an assertion; a dispute must post exactly the same bond. Payout
 amount fields do not set the bond. Verify the bond and deadlines in Shield's

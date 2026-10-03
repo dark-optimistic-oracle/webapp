@@ -27,7 +27,9 @@ actual screenshots to the same `DOO-*` step identifiers.
 
 `DOOR_TOKEN_ID` is
 `346688784394585735039324415800163929700021701423791533632764818774905958305field`.
-All wallet requests specify fee `1000000` microcredits. Voting-right, confirm,
+The initial public run specified a `1000000`-microcredit priority fee. Resumed
+QA calls with `demoTools=1` specify `10000` microcredits; Shield adds the network
+base fee or displays sponsored fee coverage. Voting-right, confirm,
 deny, private award and private refund requests set `privateFee=true`; assertion,
 dispute and public bond-award requests set `privateFee=false`.
 
@@ -54,7 +56,41 @@ terms, QA asserter, no disputer, and zero vote counts. A diagnostic live-height
 read returned 20136410 before award collection, past the 20136400 grace end.
 Claim hash: `1967197542655213185970768287057963230030743952149426568688518505609222478009field`.
 
-Private voting, disputed awards and unused-right refunds are not captured yet.
+Private voting was subsequently captured for fresh assertion 2026100306.
+Disputed awards and unused-right refunds are not captured yet.
 The user confirmed no prepared private records, then authorized preparation
 and execution within an additional 10-Testnet-ALEO budget. Preserve these as
 pending steps, not as successful or failed transactions.
+
+## Private preparation and voting capture, 2026-10-03
+
+Slides 11-13 show preparation availability, private-right wallet review, and
+the public 1-confirm/0-deny tally. Private record contents were cleared before
+capture and are represented only by fingerprints in the audit journal.
+
+1. DOO-PREP-01: registry `transfer_public_to_private(DOOR_TOKEN_ID,QA,1000u128,false)`
+   accepted as `at1ccr2uqzzektj7v24w0uh3hv345a5z57wx83hlava8r56ypxl8qxqzzxc23`.
+2. DOO-PREP-02: credits `transfer_public_to_private(QA,3000000u64)` accepted as
+   `at12rv85cz88l03fz56mvfqr045tel97md3rqe6azv2clk5qa5pgsxs68zarv`.
+3. DOO-PREP-03: Shield registry record read returned one usable unspent record.
+4. DOO-PRIVATE-01/02: assertion 2026100302 was accepted with the hidden default
+   100000000-unit bond. Its 1000-unit dispute was rejected, not accepted.
+   Public readback confirmed the mismatch and no disputer. The UI now exposes
+   the creation bond; payouts are not substitutes for that input.
+5. DOO-09: assertion 2026100306 created with bond 1000, stake 100, and deadlines
+   20145650/20145700. Creation accepted as
+   `at189ahkyyf30te89r5dksh8fg585097h3jzktep3erl4tz8qv0ag8s0us2yd`;
+   its matching dispute accepted as
+   `at1uhsk6rkwqmqlyhpw8kyyn0jfhlqgljxndd00qlkczr5t7s8pfyqqe8wte9`.
+6. DOO-10: `new_voting_right(privatePayment,2026100306field,100u128)` accepted as
+   `at1zlufr8rt4we9qvdvqwsq9h0kg6vgyaeupp0ulyu984nffn3jqgpqr86mn4`.
+7. DOO-11: Shield returned a usable Oracle record, then `confirm(privateRight)`
+   accepted as `at1kh705w6fejhp0u4zq2ws0xzkxqh7juymjfpn2elsxk8nsz95dszsk9qxze`.
+   Explorer independently shows Accepted at block 20145376, fee 2973 microcredits,
+   and the confirm transition. Public readback shows confirm=1 and deny=0.
+8. DOO-12: a second `new_voting_right` using the private change record accepted
+   as `at1qf8gkdvg3thzspdcfsfep647n0fvggwq2pv927atp2mnk6qpucxs4d434s`.
+   This right remains unused for the refund demonstration after voting closes.
+
+Full wallet IDs, exact public inputs, record fingerprints, and request/response
+order are preserved in the browser journal imported into root LOG.md.

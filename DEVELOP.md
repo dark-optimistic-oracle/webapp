@@ -184,6 +184,13 @@ also defines the evidence fields, secret-redaction rules, and explicit blocker
 reporting that future contributors and coding agents must follow.
 # Demo regression fix — 2026-10-03
 
+The same hidden-input problem affected public settlement payouts: users had to
+return to Create to change those amounts. Added both payout controls to Settle,
+plus a regression test proving the selected amount is submitted. Added a Close
+audit preview button so a journal can be hidden without resetting app state.
+All 18 tests passed; lint and production build passed. Extended the slideshow
+to 13 slides and visually verified the three new PDF pages after rendering.
+
 Live Testnet QA exposed a hidden creation-bond default: the Create tab omitted
 the shared `assertCost` input, so changing payout amounts did not change the
 100,000,000-unit default bond. An attempted 1,000-unit dispute was rejected by

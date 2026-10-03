@@ -21,9 +21,12 @@ are original captures with slide/step labels in the slideshow caption.
 
 Use three fresh assertion IDs: A (undisputed), B (disputed and confirmed), and C
 (disputed and denied). Suggested starting IDs are 2026100301, 2026100302, and
-2026100303; query each before use. Use a 1000u128 DOOR bond and 100u128 voter
+2026100303; query each before use. The captured confirmed branch instead uses
+2026100306; 2026100302 records the rejected bond-mismatch experiment. Use a
+1000u128 DOOR bond and 100u128 voter
 stake for a small demonstration. DOOR base units are separate from Aleo credits
-used for execution fees. All wallet calls request a 1000000-microcredit fee.
+used for execution fees. Initial public calls requested a 1000000-microcredit
+priority fee; `&demoTools=1` QA calls request 10000, plus network base fees.
 Pick deadlines from the current live block height with enough time for proof
 generation and all approvals. The minimum dispute window is 10 blocks; voting
 must end at least 10 blocks later; voting-right purchases close 10 blocks before
@@ -31,8 +34,14 @@ voting ends. Do not shorten a live assertion's terms to accelerate filming.
 
 DOOR must be available publicly for bonds and privately for voting rights. Each
 private-fee action also needs a spendable private credits record in Shield.
-Funding or record preparation is a separately logged prerequisite, not a click
-in the oracle console. Show its transaction in the explorer if performed.
+With `&demoTools=1`, expand **QA private record preparation**. Set DOO-PREP-01,
+click **Prepare 1000 private DOOR units**, and approve the self-transfer. Set
+DOO-PREP-02, click **Prepare 3 private fee ALEO**, and approve. Set DOO-PREP-03,
+choose **Private DOOR payment** and **Load unspent records from Shield**; approve
+record sharing. Use the selected record only off-camera, submit the intended
+private call, and immediately clear its textarea. Change **Record destination**
+to Voting right, Voting receipt, or Unused voting right refund for later calls.
+These prerequisite transfers and wallet reads are separately logged.
 
 ## Act 1 - public inspection and the undisputed path
 
@@ -41,7 +50,7 @@ in the oracle console. Show its transaction in the explorer if performed.
 | DOO-01 | Open the URL; wait for the program status. | GET latest Testnet height; GET `dark_optimistic_oracle.aleo` source. | "The console checks the real Testnet before enabling transactions." |
 | DOO-02 | **Connect Wallet**, then **Shield Wallet**; approve the connection in Shield. | Wallet connection only; no Aleo execution. | "Shield keeps the signing key and generates execution proofs." Show the connected public address. |
 | DOO-03 | **Proposals**; enter a known assertion ID; **Load assertion**. Also query each new demo ID before using it. | Five oracle mapping reads: `assertions`, `asserters`, `disputers`, `confirm_votes`, `deny_votes`. | Show terms, participants, and public tally. An unused ID must report absent rather than invented state. |
-| DOO-04 | **Dispute**; set **Dispute bond** to 1000 without submitting. **Create**; enter A, title 20261003, voter stake 100, claim text, live future deadlines, asserter payout 900, disputer payout 1900; **Submit assertion**. | `dark_optimistic_oracle.aleo/create_assertion(Assertion)` -> `token_registry.aleo/burn_public`. | Explain that claim text is hashed locally and the bond is DOOR. The Create tab shares its bond value with Dispute/Settle. |
+| DOO-04 | **Create**; enter A, title 20261003, **Assertion bond** 1000, voter stake 100, claim text, live future deadlines, asserter payout 900, disputer payout 1900; **Submit assertion**. | `dark_optimistic_oracle.aleo/create_assertion(Assertion)` -> `token_registry.aleo/burn_public`. | Explain that claim text is hashed locally and the bond is DOOR. Verify the explicit bond in Shield; payout fields do not change it. |
 | DOO-05 | In Shield inspect program, function, inputs, public fee; **Approve**. Return to the console. | Proof generation, signed submission, wallet status polls. | Capture approval with public inputs only. A temporary Shield request ID does not prove acceptance. |
 | DOO-06 | Wait for an **accepted on Testnet** notice; **Proposals**, A, **Load assertion**; open its accepted transaction in the Testnet explorer. | Five mapping reads; explorer transaction read. | Show the final transaction ID, bonded terms, asserter, no disputer, and zero votes. |
 | DOO-07 | Wait until live height is strictly greater than A's dispute deadline. Refresh/read current height and reload A. | Height and mapping reads only. | "The grace period is measured in blocks. An undisputed assertion can now be used." Use a time-cut between screenshots; no fake countdown. |

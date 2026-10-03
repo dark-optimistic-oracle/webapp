@@ -87,6 +87,19 @@ describe('MainComponent', () => {
     expect(screen.getByRole('button', { name: /deny privately/i })).toBeEnabled();
   });
 
+  it('uses the payout selected in the settlement tab', async () => {
+    const consoleSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+    render(<MainComponent />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Settle' }));
+    fireEvent.change(screen.getByLabelText('Assertion ID'), { target: { value: '777' } });
+    fireEvent.change(screen.getByLabelText('Asserter payout amount'), { target: { value: '1900' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Asserter collect' }));
+    await waitFor(() => expect(executeTransactionMock).toHaveBeenCalledWith(
+      expect.objectContaining({ function: 'collect_assertion_award', inputs: ['777field', '1900u128'] }),
+    ));
+    consoleSpy.mockRestore();
+  });
+
   it('treats an HTTP 200 JSON null mapping value as missing state', async () => {
     vi.stubGlobal(
       'fetch',

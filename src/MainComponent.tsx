@@ -761,6 +761,14 @@ export default function MainComponent() {
               <input value={assertCost} onChange={(event) => setAssertCost(event.target.value)} />
             </label>
             <label>
+              Asserter payout amount
+              <input value={asserterPayout} onChange={(event) => setAsserterPayout(event.target.value)} />
+            </label>
+            <label>
+              Disputer payout amount
+              <input value={disputerPayout} onChange={(event) => setDisputerPayout(event.target.value)} />
+            </label>
+            <label>
               Voter award amount
               <input value={awardAmount} onChange={(event) => setAwardAmount(event.target.value)} />
             </label>

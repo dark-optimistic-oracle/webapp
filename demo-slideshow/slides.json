@@ -11,6 +11,9 @@
     {"file":"slide7.jpg","step":"DOO-06","caption":"Provable Explorer independently shows ACCEPTED in block 20136375, with create_assertion and nested token_registry.aleo/burn_public transitions."},
     {"file":"slide8.png","step":"DOO-08","caption":"After live height exceeded grace deadline 20136400, Shield reviewed collect_assertion_award(2026100301field,900u128). Its same-origin app label displays Verity; the actual program/function are Oracle."},
     {"file":"slide9.jpg","step":"DOO-08","caption":"Asserter award collection accepted on Testnet: at1q267dme3efmk7tnq6t92nxpvag84lnht28kyrgcj29r06yphf5gs32wf4z. Private voting and disputed awards remain unrecorded."},
-    {"file":"slide10.jpg","step":"DOO-19","caption":"The browser audit export contains human-readable operation explanations plus normalized JSON with the initiating demo step. The downloaded journal was imported into repository LOG.md."}
+    {"file":"slide10.jpg","step":"DOO-19","caption":"The browser audit export contains human-readable operation explanations plus normalized JSON with the initiating demo step. The downloaded journal was imported into repository LOG.md."},
+    {"file":"slide11.jpg","step":"DOO-PREP-01 / DOO-PREP-02 / DOO-PREP-03","caption":"Accepted self-transfers prepared 1000 private DOOR units and 3 private Testnet ALEO. Shield returned one usable registry record; only its availability and schema are shown, not plaintext."},
+    {"file":"slide12.png","step":"DOO-10","caption":"Shield reviewed new_voting_right for assertion 2026100306 with a 100-unit DOOR stake and private fees. The accepted transaction is at1zlufr8rt4we9qvdvqwsq9h0kg6vgyaeupp0ulyu984nffn3jqgpqr86mn4. Private form inputs were cleared before capture."},
+    {"file":"slide13.jpg","step":"DOO-11","caption":"After consuming the private voting right with confirm, public mapping readback shows 1 confirm and 0 deny votes. The 1000-unit assertion bond and 100-unit voter stake are visible; voter record plaintext is not."}
   ]
 }

@@ -18,6 +18,9 @@ export default function DemoAuditControl() {
     </label>
     <p>Run {context.run}. Set the screenplay step before each Aleo action.</p>
     <button type="button" onClick={() => setPreview(buildAleoAuditMarkdown())}>View demo audit log</button>
-    {preview && <textarea aria-label="Demo audit log" readOnly rows={12} value={preview} style={{ width: '100%', marginTop: 12 }} />}
+    {preview && <>
+      <button type="button" onClick={() => setPreview('')}>Close audit preview</button>
+      <textarea aria-label="Demo audit log" readOnly rows={12} value={preview} style={{ width: '100%', marginTop: 12 }} />
+    </>}
   </aside>;
 }
