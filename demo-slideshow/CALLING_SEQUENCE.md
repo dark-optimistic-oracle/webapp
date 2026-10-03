@@ -39,7 +39,22 @@ frontend wallet clicks. Network fee transitions belong to `credits.aleo`.
 
 ## Captured run
 
-Capture has started with real public Testnet reads. Wallet signing is currently
-waiting on native Computer Use permissions on m24. No new signed execution or
-accepted demo transaction is claimed here until its evidence is added.
-See LOG.md for the ordered observed records, including blocked attempts.
+Native permissions were enabled and Shield unlocked. The public branch is
+captured in slides 1-10 and in the verbatim browser journal `AUDIT_EXPORT.md`,
+also imported into root LOG.md. Request/result entries retain the initiating
+step. Wallet approval slides DOO-05 correspond to the DOO-04 logged request.
+
+| Order | Step | Accepted execution | Wallet request | Transaction |
+| --- | --- | --- | --- | --- |
+| 1 | DOO-04 | `create_assertion`, assertion 2026100301, title 20261003, bond 1000, stake 100, deadlines 20136400/20136440 | `shield_1791006181781_j5d6fhdikcr` | [accepted transaction](https://testnet.explorer.provable.com/transaction/at16h547nucs89gexhy8fguf2hlh9mkddz9pme2sx9w5czh67t6kuqsfqsw0f) |
+| 2 | DOO-08 | `collect_assertion_award(2026100301field,900u128)` after grace ended | `shield_1791006336385_spgolrhnv4g` | [accepted transaction](https://testnet.explorer.provable.com/transaction/at1q267dme3efmk7tnq6t92nxpvag84lnht28kyrgcj29r06yphf5gs32wf4z) |
+
+The assertion was accepted in block 20136375. The frontend read back the exact
+terms, QA asserter, no disputer, and zero vote counts. A diagnostic live-height
+read returned 20136410 before award collection, past the 20136400 grace end.
+Claim hash: `1967197542655213185970768287057963230030743952149426568688518505609222478009field`.
+
+Private voting, disputed awards and unused-right refunds are not captured yet.
+The user confirmed no prepared private records, then authorized preparation
+and execution within an additional 10-Testnet-ALEO budget. Preserve these as
+pending steps, not as successful or failed transactions.

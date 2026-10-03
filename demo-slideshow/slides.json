@@ -1,0 +1,16 @@
+{
+  "title": "Dark Optimistic Oracle",
+  "run": "demo-20261003",
+  "slides": [
+    {"file":"slide1.jpg","step":"DOO-01 / DOO-02","caption":"Published Testnet frontend with step markers and the connected QA wallet. Startup program/height reads succeeded; this overview is not a transaction."},
+    {"file":"slide2.jpg","step":"DOO-03","caption":"Five actual mapping reads found no assertion at fresh ID 2026100301. Existing QA assertions were not overwritten."},
+    {"file":"slide3.jpg","step":"DOO-04","caption":"Public assertion inputs: ID 2026100301, title 20261003, 1000-unit DOOR bond, 100-unit voter stake, deadlines 20136400 and 20136440. Claim text is hashed locally."},
+    {"file":"slide4.png","step":"DOO-04 / DOO-05","caption":"Shield received the create_assertion request. Exact normalized public inputs are retained in LOG.md. Wallet review is not yet blockchain acceptance."},
+    {"file":"slide5.png","step":"DOO-05","caption":"Actual Shield confirmation screen for dark_optimistic_oracle.aleo/create_assertion on Testnet; displayed network fee 1.014202 ALEO. Approval was then given."},
+    {"file":"slide6.jpg","step":"DOO-06","caption":"Accepted assertion state: QA asserter, no disputer, zero confirm and deny votes. On-chain terms match the submitted inputs."},
+    {"file":"slide7.jpg","step":"DOO-06","caption":"Provable Explorer independently shows ACCEPTED in block 20136375, with create_assertion and nested token_registry.aleo/burn_public transitions."},
+    {"file":"slide8.png","step":"DOO-08","caption":"After live height exceeded grace deadline 20136400, Shield reviewed collect_assertion_award(2026100301field,900u128). Its same-origin app label displays Verity; the actual program/function are Oracle."},
+    {"file":"slide9.jpg","step":"DOO-08","caption":"Asserter award collection accepted on Testnet: at1q267dme3efmk7tnq6t92nxpvag84lnht28kyrgcj29r06yphf5gs32wf4z. Private voting and disputed awards remain unrecorded."},
+    {"file":"slide10.jpg","step":"DOO-19","caption":"The browser audit export contains human-readable operation explanations plus normalized JSON with the initiating demo step. The downloaded journal was imported into repository LOG.md."}
+  ]
+}

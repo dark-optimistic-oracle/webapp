@@ -1,505 +1,10 @@
-# Aleo frontend call log
-
-## 2026-10-03 — Public screenshot-demo checkpoint
-
-The public Oracle branch executed from the published GitHub Pages frontend.
-Assertion 2026100301 was absent before creation, then accepted with QA asserter,
-bond 1000 DOOR units, stake 100, title 20261003 and deadlines 20136400/20136440.
-Five mapping reads returned matching terms, no disputer and zero votes.
-After grace ended, collection of 900 DOOR units was accepted. Exact request
-parameters, initiating steps, temporary wallet IDs, accepted transaction IDs and
-ordered responses are preserved below in the imported browser journal.
-Explorer and screenshot links are in `demo-slideshow/CALLING_SEQUENCE.md`.
-
-Diagnostic shell GETs to `https://api.provable.com/v2/testnet/block/height/latest`
-returned, in order: 20136366, 20136396, 20136410, 20136427, 20136437,
-20136444, 20136471 and 20136483. These are separate from frontend calls and
-have no wallet/transaction ID. They established actual block deadlines without
-resetting form state. A later diagnostic GET of the deployed `token_registry.aleo`
-source inspected `transfer_public_to_private(field,address,u128,bool)` for
-private-record preparation; no preparation transaction was submitted then.
-
-Both apps' Download audit LOG.md controls completed actual browser downloads.
-The browser download-event API timed out for Oracle, and macOS denied filesystem
-read access to Downloads even after escalation. Therefore the exact journal
-was retrieved through View demo audit log (the same Markdown generator), saved
-as AUDIT_EXPORT.md, and imported rather than claiming access to the downloaded
-file. The public export contains no secrets or private records.
-
-Ten captioned PDF/HTML slides are a public-path checkpoint, not a claim that
-every private branch is complete. The user authorized preparing private records
-and continuing within an additional 10-Testnet-ALEO budget. Aleo tools unchanged.
-
-## 2026-10-03 — Demo preparation (run demo-20261003)
-
-Purpose: capture actual frontend operations as labeled screenshots and preserve
-their ordered call evidence. The initial live page was opened and a wallet
-connection attempted; Shield was locked. No transaction was submitted or
-accepted during this preparation. macOS initially blocked native wallet access;
-after the user granted permissions, Shield unlocked successfully on m24 using
-the existing testing-machine credential. No credential is included here.
-
-The initial overview screenshot is provisional: it is not evidence of a
-transaction. Browser startup reads will be preserved from the exported journal
-during capture, rather than reconstructed from memory. Added step-tagged logs
-and tested request/result step preservation: 15 unit tests, lint, build passed;
-dependency audit has no known vulnerabilities. Planned calls are listed in
-`demo-slideshow/CALLING_SEQUENCE.md`; planned is not executed.
-
-Last updated: 2026-08-15.
-
-This file is the durable audit reference for Aleo calls initiated by the Dark
-Optimistic Oracle web app. The application writes the original event stream to
-the browser console with the prefix `[Aleo audit]`; it cannot write directly to
-this repository when served as a static GitHub Pages site. Every redacted entry
-is therefore also retained automatically in browser `localStorage`, up to the
-most recent 2,000 entries. The app's **Download audit LOG.md** control exports
-that journal with a plain-English explanation before every exact JSON entry.
-
-The call inventory below is complete for the current frontend. The retained
-live evidence section records what remains from browser QA. It does not invent
-timestamps, sequence numbers, or transaction IDs that were not retained.
-
-No private key, wallet password, seed phrase, or private record plaintext may
-be added to this file.
-
-## Audit entry lifecycle
-
-All entries use schema `aleo-browser-audit/v1` and share a `callId`:
-
-| Phase | Meaning |
-|---|---|
-| `request` | The frontend is about to perform a read or hand a transaction request to Shield. |
-| `submitted` | Shield accepted the request and returned a temporary `walletRequestId`. This is not blockchain finality. |
-| `response` | A read returned, or Shield reported terminal transaction status. Accepted writes include the real `onchainTransactionId`. |
-| `error` | The provider or wallet rejected or failed the operation. |
-
-Transaction entries repeat the program, function, caller, ordered named inputs,
-fee, and fee privacy at every phase. Reads repeat the program or network
-operation, mapping and key when applicable, HTTP method, and provider URL.
-
-Private record inputs are replaced before logging with their classification,
-plaintext length, and SHA-256 fingerprint. The fingerprint supports correlation
-without disclosing a spendable record.
-
-## Complete call inventory
-
-### Network and program reads
-
-| Logged function | Parameters | Operation |
-|---|---|---|
-| `get_latest_block_height` | Provider URL and `GET` method | Obtains the current Testnet height used to propose safe assertion deadlines. |
-| `get_program` | `programId = dark_optimistic_oracle.aleo`, provider URL and `GET` method | Fails closed when the deployed oracle cannot be verified. |
-
-### Assertion mapping reads
-
-Each lookup uses `get_mapping_value` on `dark_optimistic_oracle.aleo` with the
-known assertion ID as its mapping key.
-
-| Mapping | Operation |
-|---|---|
-| `assertions` | Loads the public assertion fields and deadlines. |
-| `asserters` | Loads the address that bonded and created the assertion. |
-| `disputers` | Determines whether the optimistic assertion was challenged. |
-| `confirm_votes` | Loads the public aggregate confirm count; individual votes remain private. |
-| `deny_votes` | Loads the public aggregate deny count; individual votes remain private. |
-
-An absent mapping may be returned as HTTP 404 or HTTP 200 with JSON `null`.
-Both are treated as missing state.
-
-### Transactions
-
-All writes target `dark_optimistic_oracle.aleo`, use a fee of 1,000,000
-microcredits, and require interactive Shield approval. Public-balance flows use
-a public fee. Record-based voting flows use a private fee so the fee payer is
-not added as a public identity link; the called `confirm` or `deny` transition
-and aggregate vote counts remain public.
-
-| Function | Ordered named inputs | Fee | Operation |
-|---|---|---|---|
-| `create_assertion` | `assertion` | Public | Bonds public DOOR and records the assertion ID, title, content hash, cost, voter stake, dispute deadline, and voting deadline. |
-| `dispute_assertion` | `assertion_id`, `assertion_cost` | Public | Bonds matching public DOOR before the dispute deadline and opens private voting. |
-| `new_voting_right` | `payment`, `assertion_id`, `voter_stake` | Private | Consumes a private DOOR payment record and creates a private voting-right record. `payment` is redacted in logs. |
-| `confirm` | `voting_right` | Private | Consumes a private voting right, increments the public confirm aggregate, and returns a private receipt. |
-| `deny` | `voting_right` | Private | Consumes a private voting right, increments the public deny aggregate, and returns a private receipt. |
-| `collect_voting_award` | `award_amount`, `voting_receipt` | Private | Claims the private winning-voter award after voting closes. |
-| `refund_voting_right` | `refund_amount`, `voting_right` | Private | Refunds an unused private voting right after voting closes. |
-| `collect_assertion_award` | `assertion_id`, `payout_amount` | Public | Claims the public asserter payout after the applicable deadline and outcome checks. |
-| `collect_dispute_award` | `assertion_id`, `payout_amount` | Public | Claims the public disputer payout when private voting rejects the assertion. |
-
-## Retained live Testnet evidence
-
-The production webapp was exercised against Testnet for program availability,
-block-height reads, assertion lookups, and workflow navigation. The exact
-per-call console sequence and timestamps from that earlier read-only session
-were not exported, so they are not presented as verbatim logs here.
-
-No signed transaction was submitted through the webapp during the retained
-session. A shared-program `create_assertion` transaction was later submitted
-through the prediction-market frontend; it is recorded in that repository's
-`LOG.md` and should not be misattributed to this UI.
-
-## Representative messages
-
-The following messages demonstrate the exact current schema. Their sequence,
-timestamp, and call ID are illustrative rather than retained live values.
-
-### Mapping read
-
-```json
-{"schema":"aleo-browser-audit/v1","sequence":1,"timestamp":"2026-08-15T00:00:00.000Z","callId":"aleo-call-1","phase":"request","kind":"read","network":"testnet","description":"Read dark_optimistic_oracle.aleo.assertions[187031922field]","program":"dark_optimistic_oracle.aleo","function":"get_mapping_value","parameters":{"mapping":"assertions","key":"187031922field","httpMethod":"GET","url":"https://api.provable.com/v2/testnet/program/dark_optimistic_oracle.aleo/mapping/assertions/187031922field"}}
-{"schema":"aleo-browser-audit/v1","sequence":2,"timestamp":"2026-08-15T00:00:00.250Z","callId":"aleo-call-1","phase":"response","kind":"read","network":"testnet","description":"Read dark_optimistic_oracle.aleo.assertions[187031922field]","program":"dark_optimistic_oracle.aleo","function":"get_mapping_value","parameters":{"mapping":"assertions","key":"187031922field","httpMethod":"GET","url":"https://api.provable.com/v2/testnet/program/dark_optimistic_oracle.aleo/mapping/assertions/187031922field"},"result":{"httpStatus":200,"ok":true}}
-```
-
-### Private-record redaction
-
-```json
-{"schema":"aleo-browser-audit/v1","sequence":3,"timestamp":"2026-08-15T00:00:01.000Z","callId":"aleo-call-2","phase":"request","kind":"transaction","network":"testnet","description":"Submit dark_optimistic_oracle.aleo.new_voting_right","program":"dark_optimistic_oracle.aleo","function":"new_voting_right","parameters":{"caller":"aleo1example","inputs":[{"position":0,"name":"payment","value":{"redacted":true,"classification":"private Aleo record","sha256":"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef","plaintextLength":412}},{"position":1,"name":"assertion_id","value":"187031922field"},{"position":2,"name":"voter_stake","value":"1000000u128"}],"fee":1000000,"privateFee":true}}
-```
-
-The example address and fingerprint are deliberately non-spendable placeholders.
-
-## Preserving future sessions
-
-For a future browser QA session, use **Download audit LOG.md**. Review the
-generated explanations and JSON, then append the relevant dated session to this
-checked-in file and commit it. The static site cannot commit to GitHub on the
-user's behalf. Preserve rejected and timed-out calls as well as accepted calls;
-never replace a `walletRequestId` with an assumed on-chain ID.
-
-## Security-audit experiment: 2026-08-15
-
-**What happened:** A fresh read-only audit checked the webapp source, wallet
-request construction, audit redaction, GitHub Pages workflow and response
-headers, dependency advisories, tests, production build, tracked history, and
-the Testnet oracle program used by this app. No wallet transaction was prepared,
-signed, or broadcast during this audit.
-
-The experiment ran from approximately `2026-08-15T10:09:00Z` through
-`2026-08-15T10:18:35Z`.
-
-### Local verification
-
-| Command or check | Result |
-|---|---|
-| `pnpm run lint` | Passed. |
-| `pnpm exec vitest run` | 11 of 11 browser/unit tests passed. Aleo entries printed by these tests used mocked providers and wallet IDs; they were not live calls. |
-| `pnpm run build` | Passed with Vite 8.0.12; the static bundle was produced without source maps or detected secret strings. |
-| `pnpm audit --prod` | No known production dependency vulnerabilities. |
-| `pnpm audit` | Reported 17 development-tool advisories: 1 critical, 10 high, 5 moderate, and 1 low. |
-| Current and history-aware tracked-secret scans | No Aleo private key, seed-phrase assignment, wallet-password assignment, or PEM private key was found. The ignored QA environment file remained mode `600`. |
-| GitHub Pages `HEAD` and index reads | Returned HTTP 200 and the current production asset hashes. HSTS was present; CSP, clickjacking protection, Referrer-Policy, Permissions-Policy, and `X-Content-Type-Options` were absent. |
-
-### Read-only Testnet oracle verification
-
-All reads used network `testnet` and endpoint
-`https://api.provable.com/v2`. They did not require a private key.
-
-1. `leo query program dark_optimistic_oracle.aleo -q` returned edition-0 Aleo
-   instructions. A whitespace-insensitive diff against the fresh local build
-   found only the intentional constructor administrator substitution:
-   `aleo1a2k4a9phy4kklx2ad0aed0lgvyzaegf0gfp85uldzhjzn8tt05zsjmfjnf`.
-2. `leo query program dark_optimistic_oracle.aleo --mapping-value fee_collector 0u8 -q`
-   returned the same administrator address. This confirms that the existing
-   Testnet deployment was initialized by the intended account.
-3. `leo query program token_registry.aleo --mapping-value registered_tokens
-   346688784394585735039324415800163929700021701423791533632764818774905958305field -q`
-   returned the DOOR registration. Its token administrator and authorization
-   party are the oracle program address
-   `aleo1nyflwg9mjfkfp2n9mtng0snxj9qrhahkjxp5l9pag4zxm3qrssrqwv8tml`, and its
-   retained supply was `999999900000000u128` of a
-   `10000000000000000u128` maximum.
-
-The audit found security issues that require remediation before Mainnet. This
-entry records the experiment and public network evidence; it is not a claim
-that the application is secure or an independent third-party audit.
-
-
-## Security remediation and Testnet upgrade experiment: 2026-08-15
-
-**What happened:** The audited contract fixes were compiled with Leo 4.4.1,
-checked against the deployed edition-0 interfaces, and submitted through the
-dedicated Testnet administrator. No wallet password, private key, seed phrase,
-private record, transaction signature, or raw provider error body is retained
-here.
-
-The experiment ran from approximately `2026-08-15T10:45:00Z` through
-`2026-08-15T12:12:25Z` using network `testnet` and the official Provable
-API endpoints.
-
-### Read-only preflight and compatibility calls
-
-| Call | Public parameters | Result and purpose |
-|---|---|---|
-| `get_program` / `latest_edition` | `dark_optimistic_oracle.aleo` | Edition 0. The generated candidate kept its program ID, mappings, records, transition inputs, and finalize input order. |
-| `get_program` / `latest_edition` | `doo_prediction_market.aleo` | Edition 0 before the market upgrade. The generated candidate preserved every edition-0 interface and added only `settlement_assertions`. |
-| `get_mapping_value` | Oracle `fee_collector[0u8]` | Returned the documented dedicated administrator. |
-| `get_mapping_value` | Oracle `assertions[187031922field]` | Returned the retained QA assertion before and after the attempts with identical fields. |
-| `get_mapping_value` | Market `markets[187031921field]`, collateral, supplies, and resolution | Returned the retained market, `300000u128` collateral, `200000u128` YES, `100000u128` NO, and `resolved = false`. |
-
-Leo 4.3.4 first produced an obsolete base-fee estimate and the network did not
-accept candidate `at184pml9xx44j82g3cz8um4sl4xfesj5lvlxqzyjnk07lyzv7nlcpswcph5e`.
-No accepted transaction or fee resulted. Leo 4.4.1 uses the active consensus
-V18 cost rules. Local compatibility checks also rejected an oracle initializer
-and a market settlement candidate whose finalize input order differed from
-edition 0; both were corrected before any broadcast or fee.
-
-### Oracle upgrade calls
-
-The final oracle candidate's public parameters were:
-
-- program: `dark_optimistic_oracle.aleo`;
-- existing edition: `0`;
-- administrator: the documented dedicated Testnet administrator;
-- combined circuit density: `3481397`;
-- minimum public fee if accepted: `29.406397` credits;
-- dependencies: canonical `token_registry.aleo` and `credits.aleo`.
-
-Consensus V18 gives the target block 75,000 deployment-density units per
-certificate, so this candidate needs at least 47 certificates. The following
-public deployment IDs reached validators but landed in lower-capacity blocks
-and were recorded in each block's `aborted_transaction_ids` list:
-
-| Candidate transaction ID | Block | Certificates | Result |
-|---|---:|---:|---|
-| `at1550we5h9nnd7sp7mc60n8u35v26m2cpkr7xn7pvmaxevx2ynpc8sp60srj` | 18742086 | 44 | Aborted; no fee or state change. |
-| `at1zs4syx646ggk44u5vgkqe74edtfyrf6rcmvrmx9qxe5cnv70ssqqz9hjdt` | 18742208 | 38 | Aborted; no fee or state change. |
-| `at197nejl2gj066r49nx4jhdunm86ckf7crahpf620y89cljc022vpqfsdwep` | 18742421 | 41 | Aborted; no fee or state change. |
-| `at1zfcprxyanh2hw3xmlafpjk3kh2e02mskctr6g3ruwxaukrhvqvqqu3gy8r` | 18742478 | 38 | Aborted; no fee or state change. |
-| `at1gxsl36z6zdnqyzq6zlrft5j03cas25gt9atwav8r8eawckt5jygs3veylj` | 18742531 | 39 | Aborted; no fee or state change. |
-| `at1rqrm39jdkccsgepe9qfmmncu6q6hmnsrn8c8f7ddqt6hj03gzy9sphrqex` | 18742557 | 34 | Aborted; no fee or state change. |
-| `at1e57gadlhwu9z7nkr4s4hhpml620rxrrqfywflf766ls3lah6gvxsawdg6q` | 18742799 | 36 | Aborted; no fee or state change. |
-| `at1ntx9xsdtg89sswyrdex4qa9gl2l2w2tqe5etm4mlny80jq3tdyrqdnd6p0` | 18743022 | 30 | Aborted; no fee or state change. |
-
-The first two rows used the earlier, slightly larger compatible candidate; the
-remaining rows used the final `3481397`-density candidate. Several other
-provider calls returned HTTP 522 before a candidate ID was returned. They did
-not produce an accepted or aborted ledger transaction and charged no fee.
-
-### Accepted prediction-market upgrade
-
-**Operation:** Upgrade `doo_prediction_market.aleo` from edition 0 to edition
-1 while leaving the oracle at edition 0.
-
-- Deployment transaction:
-  `at1gxza4mhcrendchvguswhyvjvq3ga5pc3wcl7948qvfgzs3g705yslssaal`
-- Fee transition:
-  `au1tr36sqgsqnu695pc2097trdv096fmm0hmehgql6lqlj00knyyspscsllzn`
-- Fee transaction:
-  `at14lfgnn4lwxgq2q6hwlxx4y6nlxqvgmytvyzjkepxsf89m9k4hsrq6g62yx`
-- Public fee: `12.687318` credits.
-- Accepted deployment edition embedded in the transaction: `1`.
-
-One official provider reported edition 1 immediately while another briefly
-reported edition 0; the accepted transaction itself embeds edition 1. After the
-upgrade, every retained market field and accounting mapping listed above was
-unchanged. `settlement_assertions[187031921field]` returned `null`, which is
-correct because that legacy QA market has not settled.
-
-### Final state
-
-Final local verification completed after the source and documentation changes:
-
-| Check | Result |
-|---|---|
-| Webapp lint, Vitest, TypeScript, production build | Passed; 14/14 tests. |
-| Prediction-market lint/static checks, Vitest, TypeScript, production build | Passed; 36/36 tests. |
-| Leo 4.4.1 core/oracle and market suites | Passed; 10/10 oracle and 13/13 market tests. |
-| Devnet, Testnet, and Mainnet deployment dry runs | Passed; no dry run signed or broadcast a transaction. |
-| Production and full dependency audits in both apps | Zero known vulnerabilities. |
-| Documentation production build | Passed. |
-
-- Oracle: edition 0; security upgrade is committed and tested but still awaits
-  a target block with sufficient certificate capacity.
-- Prediction market: accepted edition 1 with the settlement-binding and
-  distinct-claim fixes active.
-- Dedicated administrator public balance: `949027761u64` after the one
-  accepted `12.687318`-credit market fee. Oracle aborts did not reduce it.
-- Mainnet: no transaction was signed or broadcast.
-
-To retry the oracle safely, install Leo 4.4.1 and run
-`LEO_BIN=/path/to/leo-4.4.1 ./deploy_testnet.sh` from `core`. Confirm edition
-1 and the preserved mappings before attempting any later edition.
-
-## 2026-08-15 09:08 EDT — Published Pages smoke tests
-
-GitHub Actions run `31884532950` completed successfully for webapp commit
-`284f9c4`; documentation run `31884534110` also completed successfully. The
-published oracle console and documentation were loaded in the integrated
-browser. Both documents completed loading with their expected navigation and
-content, the oracle console exposed the on-chain assertion loader and audit-log
-download, and Shield correctly remained disconnected. No browser warning or
-error was observed during that check.
-
-Prediction-market Actions run `31886243646` subsequently passed its complete
-frontend, security, 23-test Leo, three-network dry-build, production-build, and
-Pages-deployment gates. Its published page loaded the market, explanation, and
-documentation sections; public Testnet reads reported both programs available.
-No wallet was connected during any Pages smoke test, so no proof, signed
-transaction, submission, or fee occurred.
-
-Before that successful run, two prediction-market CI experiments identified
-macOS-only `/bin/zsh` path use and an undeclared `rg` dependency in the shell
-harness. The entrypoints now use portable Bash and standard `grep`. The exact
-23-test contract suite passed in a clean Ubuntu 24.04 amd64 container without
-either command. The container mounted public source read-only, loaded no secret
-environment file, and made no signed or broadcast Aleo call.
-
-## 2026-08-15 09:32 EDT — Initialization upgrade-rule assessment
-
-**Purpose:** Determine whether Aleo prevents changes to a function named
-`initialize`, and distinguish that function from the immutable upgrade-policy
-constructor.
-
-Read-only Testnet calls confirmed oracle edition 0, fetched its public program,
-and confirmed the intended fee collector. The on-chain constructor and freshly
-compiled candidate constructor matched byte-for-byte. `initialize` retained
-zero inputs, one future output, and the same three finalize-input types; only
-its internal signer/caller checks changed. No Testnet proof, signature,
-transaction, broadcast, or fee occurred.
-
-A disposable local program then made the following Devnet calls using the
-generic local fixture account and non-economic Devnet credits:
-
-| Operation | Public parameters | Result |
-|---|---|---|
-| Deploy `init_upgrade_probe.aleo` edition 0 | Immutable administrator constructor; unrestricted `initialize` logic | Accepted as `at1kmvyghxp3ap534sjj4rkwf9eppmmuq2upjawa0y7nn4l2hjgtuzsyn36rq`. |
-| Upgrade the same program | Constructor unchanged; administrator signer/caller checks added inside `initialize`; interfaces unchanged | Accepted as edition 1 in `at1hwq2gmu4zj4000jfjzkgn5w4sskx5jmldt5v57sqq5yakva3ac8q43djuy`. |
-| Execute upgraded `initialize` | No user inputs; caller and signer were the public Devnet administrator | Accepted as `at1jxl4yk280d9yut0gawyqydsy4tustu6xx2zjnkc4w76wurx3tu9qrtapzg`; `initialized_by[0u8]` returned the expected administrator. |
-
-The existing local snarkOS 4.8.1 fixture ran consensus V17 while Leo 4.4.1
-warned that it expected V18. That is a local harness-version mismatch, not an
-upgrade rejection. The inspected active snarkVM 4.9 rule is the same: the
-special constructor is immutable, while compatible function/finalize logic is
-mutable. The real public blocker remains the oracle candidate's `3481397`
-combined density, which needs at least 47 certificates; attempted Testnet blocks
-provided only 30–44.
-
-## 2026-08-15 10:18 EDT — Accepted oracle edition-1 upgrade
-
-**Human-readable summary:** The committed security candidate was profiled
-without broadcasting, checked against the live edition-0 interface, and then
-submitted through the dedicated Testnet administrator. A live 60-block capacity
-sample contained three blocks with at least the required 47 certificates. The
-first controlled submission in this run landed in a 78-certificate block and
-was accepted. Existing oracle state was preserved and initialization was not
-repeated. No secret, private record, signature, or wallet credential is retained
-in this log.
-
-### Read-only profiling and preflight calls
-
-| Operation | Public parameters | Result and explanation |
-|---|---|---|
-| `get_program` / `latest_edition` | `dark_optimistic_oracle.aleo` | Loaded edition `0` and passed Leo's upgrade-interface check before transaction generation. |
-| Offline `leo upgrade --save` | Testnet, canonical `token_registry.aleo`, no broadcast | Generated the real candidate artifact with `3481397` combined density and a `29.406397`-credit accepted fee. A transient state-root read failed before one artifact was produced; no transaction ID, broadcast, or fee resulted. |
-| `get_block` capacity sample | 60 recent Testnet blocks | Certificate counts ranged from 35 to 82; three blocks had at least 47 certificates, proving that the candidate could fit without changing its interfaces or logic. |
-| Core unit suite | Leo 4.4.1 and local registry fixture | Passed all 10 tests. |
-
-### Accepted upgrade call
-
-| Field | Public value |
-|---|---|
-| Program | `dark_optimistic_oracle.aleo` |
-| Previous / accepted edition | `0` / `1` |
-| Deployment transaction | `at1900gz2klm9we2deqarpv2fpqhnjqjr3cvr43stxq4525l6s9zupq6r0v5p` |
-| Fee transition | `au1w9s7u95tn5h0lgn9gf5nvvwm4sh3gymjzpzprkvckfg2ypu2qq8q8ap0e4` |
-| Fee transaction | `at1ga3x8fmn9cc7e2p8r950cy4w3ncpz54ke6upmwh8r5kvu7g4jyqq8zmrag` |
-| Accepted block / certificates | `18745064` / `78` |
-| Combined deployment density | `3481397` |
-| Public fee | `29406397u64` (`29.406397` credits) |
-| Administrator balance | `949027761u64` before; `919621364u64` after |
-
-### Post-upgrade verification calls
-
-| Read | Result and purpose |
-|---|---|
-| `latest_edition` | Returned `1`. |
-| Accepted deployment body | Embedded edition `1`, the expected program ID, and the locally compiled instructions (formatting-normalized exact match). |
-| Deployed source | Contains the immutable documented constructor, signer and caller administrator guards in `initialize`, and the 10-block `new_voting_right` purchase cutoff. |
-| `fee_collector[0u8]` | Still `aleo1a2k4a9phy4kklx2ad0aed0lgvyzaegf0gfp85uldzhjzn8tt05zsjmfjnf`. |
-| `assertions[187031922field]` | Retained the exact QA assertion fields, costs, and deadlines. |
-| Related assertion mappings | Creation height `18703569u32`, documented QA asserter, no disputer, zero confirm votes, zero deny votes, and no claim flags—all unchanged. |
-
-The deployment script detected the existing initialized mapping and skipped
-`initialize`. This is important: an upgrade changes program logic but does not
-rerun application initialization or overwrite prior mappings.
-
-Final frontend verification passed ESLint, 14/14 Vitest tests, TypeScript, and
-the production Vite build. No wallet transaction was needed for these checks.
-
-## 2026-10-02 22:49 EDT — Aleo Testnet and development-tool version audit
-
-**Purpose:** Check whether the repository's pinned Aleo tools, the local
-developer tools, the public Testnet protocol, the wallet integration, and the
-general frontend toolchain have newer releases. This was a read-only audit. It
-did not generate a proof or signature, connect a wallet, submit a transaction,
-spend a fee, deploy or upgrade a program, or change any on-chain state.
-
-### Ordered read-only operations
-
-1. Read local executable versions and repository pins. The default machine
-   executables reported Leo `4.3.4` and a snarkOS commit corresponding to
-   `3.7.1`; the repository's Leo-managed Devnet binary reported snarkOS
-   `4.8.1`. Contract manifests, scripts, and CI in the oracle and prediction
-   market repositories pin Leo `4.4.1`. The machine also reported Node
-   `24.21.0`, pnpm `10.14.0`, and Rust `1.97.1`.
-2. Read the official ProvableHQ GitHub release metadata for Leo, snarkOS,
-   snarkVM, the Provable SDK, and the Aleo developer toolkit. No GitHub write
-   API was called. The newest released Leo compiler was `4.4.4`; official
-   Testnet snarkOS and snarkVM `4.11.0` releases were published for consensus
-   V21; and SDK `0.12.0` added V21/Varuna V3 support. Leo's unreleased main
-   branch identifies `4.4.5` with snarkVM/snarkOS `4.11.0`, but there was no
-   corresponding released `leo-lang` tag at the time of this check.
-3. Queried the public Testnet height from both
-   `https://api.provable.com/v2/testnet/block/height/latest` and
-   `https://api.explorer.provable.com/v1/testnet/block/height/latest`. Both
-   returned block `20132974`. The official snarkOS Testnet `4.11.0` release
-   schedules consensus V21 for block `20234000`, leaving `101026` blocks at
-   the observed height. The same endpoint family reported
-   `token_registry.aleo` edition `1`.
-4. Read official npm registry metadata for the installed wallet packages and
-   ran pnpm's read-only outdated-package report. The installed
-   `@provablehq/aleo-wallet-adaptor-*` packages remain at `1.0.1` but are
-   deprecated; the supported package family is now spelled `adapter`, with
-   newer core, React, UI, Shield, and wallet-standard releases. The report also
-   found optional frontend updates, including major-version changes to React,
-   TypeScript, Vitest, pnpm, and other packages.
-5. Read the official Node.js release index. Local Node `24.21.0` was the current
-   Node 24 LTS release, so no Node runtime update was indicated.
-
-### Result and interpretation
-
-The Aleo-specific toolchain is materially behind. Leo `4.4.4` is the current
-released compiler and uses snarkVM `4.10.0` rules for the active V20 network,
-while Testnet node operators need `testnet-v4.11.0` before the announced V21
-activation. The repository should first move from Leo `4.4.1` to released Leo
-`4.4.4` and migrate the deprecated wallet `adaptor` packages to the current
-`adapter` family, with regression and Devnet testing. A second compatibility
-update will be required when a released Leo compiler carrying snarkVM `4.11.0`
-becomes available; unreleased Leo source should not silently replace the pinned
-production toolchain. Broad React, TypeScript, Vitest, and pnpm major upgrades
-should be tested separately rather than combined with the time-sensitive Aleo
-compatibility work.
-
-The hosted GitHub Pages frontend does not itself run a snarkOS node, so an old
-local node binary does not by itself take the published site offline. However,
-deployment/proof tooling, a locally operated node, and the user's wallet must
-be compatible with the activated protocol to produce and submit new
-transactions. Existing deployed programs and their mappings are not erased by
-the network-version activation.
-
-
-## Imported frontend journal
-
-<!-- audit-export-sha256: 3771f117bad99cac784c208dd20458b49d055d0405480a62acc042ca5b533516 -->
-
-## Dark Optimistic Oracle webapp Aleo call log
+# Dark Optimistic Oracle webapp Aleo call log
 
 Generated: 2026-10-03T05:47:57.699Z.
 
 > Generated automatically from the browser audit journal. Private Aleo record plaintext is redacted before persistence.
 
-### 1. Read the latest Aleo Testnet block height
+## 1. Read the latest Aleo Testnet block height
 
 **What happened:** The frontend requested: Read the latest Aleo Testnet block height. The parameters below identify the exact public provider call.
 
@@ -528,7 +33,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 2. Read deployed program dark_optimistic_oracle.aleo
+## 2. Read deployed program dark_optimistic_oracle.aleo
 
 **What happened:** The frontend requested: Read deployed program dark_optimistic_oracle.aleo. The parameters below identify the exact public provider call.
 
@@ -559,7 +64,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 3. Read deployed program dark_optimistic_oracle.aleo
+## 3. Read deployed program dark_optimistic_oracle.aleo
 
 **What happened:** The public provider completed the read. HTTP result: {"httpStatus":200,"ok":true}.
 
@@ -594,7 +99,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 4. Read the latest Aleo Testnet block height
+## 4. Read the latest Aleo Testnet block height
 
 **What happened:** The public provider completed the read. HTTP result: {"httpStatus":200,"ok":true}.
 
@@ -627,7 +132,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 5. Read the latest Aleo Testnet block height
+## 5. Read the latest Aleo Testnet block height
 
 **What happened:** The frontend requested: Read the latest Aleo Testnet block height. The parameters below identify the exact public provider call.
 
@@ -656,7 +161,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 6. Read deployed program dark_optimistic_oracle.aleo
+## 6. Read deployed program dark_optimistic_oracle.aleo
 
 **What happened:** The frontend requested: Read deployed program dark_optimistic_oracle.aleo. The parameters below identify the exact public provider call.
 
@@ -687,7 +192,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 7. Read the latest Aleo Testnet block height
+## 7. Read the latest Aleo Testnet block height
 
 **What happened:** The public provider completed the read. HTTP result: {"httpStatus":200,"ok":true}.
 
@@ -720,7 +225,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 8. Read deployed program dark_optimistic_oracle.aleo
+## 8. Read deployed program dark_optimistic_oracle.aleo
 
 **What happened:** The public provider completed the read. HTTP result: {"httpStatus":200,"ok":true}.
 
@@ -755,7 +260,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 9. Read the latest Aleo Testnet block height
+## 9. Read the latest Aleo Testnet block height
 
 **What happened:** The frontend requested: Read the latest Aleo Testnet block height. The parameters below identify the exact public provider call.
 
@@ -789,7 +294,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 10. Read deployed program dark_optimistic_oracle.aleo
+## 10. Read deployed program dark_optimistic_oracle.aleo
 
 **What happened:** The frontend requested: Read deployed program dark_optimistic_oracle.aleo. The parameters below identify the exact public provider call.
 
@@ -825,7 +330,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 11. Read deployed program dark_optimistic_oracle.aleo
+## 11. Read deployed program dark_optimistic_oracle.aleo
 
 **What happened:** The public provider completed the read. HTTP result: {"httpStatus":200,"ok":true}.
 
@@ -865,7 +370,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 12. Read the latest Aleo Testnet block height
+## 12. Read the latest Aleo Testnet block height
 
 **What happened:** The public provider completed the read. HTTP result: {"httpStatus":200,"ok":true}.
 
@@ -903,7 +408,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 13. Read dark_optimistic_oracle.aleo.assertions[2026100301field]
+## 13. Read dark_optimistic_oracle.aleo.assertions[2026100301field]
 
 **What happened:** The frontend requested: Read dark_optimistic_oracle.aleo.assertions[2026100301field]. The parameters below identify the exact public provider call.
 
@@ -940,7 +445,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 14. Read dark_optimistic_oracle.aleo.asserters[2026100301field]
+## 14. Read dark_optimistic_oracle.aleo.asserters[2026100301field]
 
 **What happened:** The frontend requested: Read dark_optimistic_oracle.aleo.asserters[2026100301field]. The parameters below identify the exact public provider call.
 
@@ -977,7 +482,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 15. Read dark_optimistic_oracle.aleo.disputers[2026100301field]
+## 15. Read dark_optimistic_oracle.aleo.disputers[2026100301field]
 
 **What happened:** The frontend requested: Read dark_optimistic_oracle.aleo.disputers[2026100301field]. The parameters below identify the exact public provider call.
 
@@ -1014,7 +519,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 16. Read dark_optimistic_oracle.aleo.confirm_votes[2026100301field]
+## 16. Read dark_optimistic_oracle.aleo.confirm_votes[2026100301field]
 
 **What happened:** The frontend requested: Read dark_optimistic_oracle.aleo.confirm_votes[2026100301field]. The parameters below identify the exact public provider call.
 
@@ -1051,7 +556,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 17. Read dark_optimistic_oracle.aleo.deny_votes[2026100301field]
+## 17. Read dark_optimistic_oracle.aleo.deny_votes[2026100301field]
 
 **What happened:** The frontend requested: Read dark_optimistic_oracle.aleo.deny_votes[2026100301field]. The parameters below identify the exact public provider call.
 
@@ -1088,7 +593,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 18. Read dark_optimistic_oracle.aleo.assertions[2026100301field]
+## 18. Read dark_optimistic_oracle.aleo.assertions[2026100301field]
 
 **What happened:** The public provider completed the read. HTTP result: {"httpStatus":200,"ok":true}.
 
@@ -1129,7 +634,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 19. Read dark_optimistic_oracle.aleo.confirm_votes[2026100301field]
+## 19. Read dark_optimistic_oracle.aleo.confirm_votes[2026100301field]
 
 **What happened:** The public provider completed the read. HTTP result: {"httpStatus":200,"ok":true}.
 
@@ -1170,7 +675,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 20. Read dark_optimistic_oracle.aleo.asserters[2026100301field]
+## 20. Read dark_optimistic_oracle.aleo.asserters[2026100301field]
 
 **What happened:** The public provider completed the read. HTTP result: {"httpStatus":200,"ok":true}.
 
@@ -1211,7 +716,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 21. Read dark_optimistic_oracle.aleo.disputers[2026100301field]
+## 21. Read dark_optimistic_oracle.aleo.disputers[2026100301field]
 
 **What happened:** The public provider completed the read. HTTP result: {"httpStatus":200,"ok":true}.
 
@@ -1252,7 +757,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 22. Read dark_optimistic_oracle.aleo.deny_votes[2026100301field]
+## 22. Read dark_optimistic_oracle.aleo.deny_votes[2026100301field]
 
 **What happened:** The public provider completed the read. HTTP result: {"httpStatus":200,"ok":true}.
 
@@ -1293,7 +798,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 23. Submit dark_optimistic_oracle.aleo.create_assertion
+## 23. Submit dark_optimistic_oracle.aleo.create_assertion
 
 **What happened:** The frontend prepared dark_optimistic_oracle.aleo.create_assertion and handed the displayed parameters to Shield for interactive approval.
 
@@ -1336,7 +841,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 24. Submit dark_optimistic_oracle.aleo.create_assertion
+## 24. Submit dark_optimistic_oracle.aleo.create_assertion
 
 **What happened:** Shield accepted the wallet request. Its walletRequestId is temporary and does not prove that the transaction reached the blockchain.
 
@@ -1382,7 +887,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 25. Submit dark_optimistic_oracle.aleo.create_assertion
+## 25. Submit dark_optimistic_oracle.aleo.create_assertion
 
 **What happened:** Shield reported accepted. The accepted on-chain transaction ID is at16h547nucs89gexhy8fguf2hlh9mkddz9pme2sx9w5czh67t6kuqsfqsw0f.
 
@@ -1433,7 +938,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 26. Read dark_optimistic_oracle.aleo.assertions[2026100301field]
+## 26. Read dark_optimistic_oracle.aleo.assertions[2026100301field]
 
 **What happened:** The frontend requested: Read dark_optimistic_oracle.aleo.assertions[2026100301field]. The parameters below identify the exact public provider call.
 
@@ -1470,7 +975,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 27. Read dark_optimistic_oracle.aleo.asserters[2026100301field]
+## 27. Read dark_optimistic_oracle.aleo.asserters[2026100301field]
 
 **What happened:** The frontend requested: Read dark_optimistic_oracle.aleo.asserters[2026100301field]. The parameters below identify the exact public provider call.
 
@@ -1507,7 +1012,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 28. Read dark_optimistic_oracle.aleo.disputers[2026100301field]
+## 28. Read dark_optimistic_oracle.aleo.disputers[2026100301field]
 
 **What happened:** The frontend requested: Read dark_optimistic_oracle.aleo.disputers[2026100301field]. The parameters below identify the exact public provider call.
 
@@ -1544,7 +1049,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 29. Read dark_optimistic_oracle.aleo.confirm_votes[2026100301field]
+## 29. Read dark_optimistic_oracle.aleo.confirm_votes[2026100301field]
 
 **What happened:** The frontend requested: Read dark_optimistic_oracle.aleo.confirm_votes[2026100301field]. The parameters below identify the exact public provider call.
 
@@ -1581,7 +1086,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 30. Read dark_optimistic_oracle.aleo.deny_votes[2026100301field]
+## 30. Read dark_optimistic_oracle.aleo.deny_votes[2026100301field]
 
 **What happened:** The frontend requested: Read dark_optimistic_oracle.aleo.deny_votes[2026100301field]. The parameters below identify the exact public provider call.
 
@@ -1618,7 +1123,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 31. Read dark_optimistic_oracle.aleo.assertions[2026100301field]
+## 31. Read dark_optimistic_oracle.aleo.assertions[2026100301field]
 
 **What happened:** The public provider completed the read. HTTP result: {"httpStatus":200,"ok":true}.
 
@@ -1659,7 +1164,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 32. Read dark_optimistic_oracle.aleo.asserters[2026100301field]
+## 32. Read dark_optimistic_oracle.aleo.asserters[2026100301field]
 
 **What happened:** The public provider completed the read. HTTP result: {"httpStatus":200,"ok":true}.
 
@@ -1700,7 +1205,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 33. Read dark_optimistic_oracle.aleo.deny_votes[2026100301field]
+## 33. Read dark_optimistic_oracle.aleo.deny_votes[2026100301field]
 
 **What happened:** The public provider completed the read. HTTP result: {"httpStatus":200,"ok":true}.
 
@@ -1741,7 +1246,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 34. Read dark_optimistic_oracle.aleo.disputers[2026100301field]
+## 34. Read dark_optimistic_oracle.aleo.disputers[2026100301field]
 
 **What happened:** The public provider completed the read. HTTP result: {"httpStatus":200,"ok":true}.
 
@@ -1782,7 +1287,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 35. Read dark_optimistic_oracle.aleo.confirm_votes[2026100301field]
+## 35. Read dark_optimistic_oracle.aleo.confirm_votes[2026100301field]
 
 **What happened:** The public provider completed the read. HTTP result: {"httpStatus":200,"ok":true}.
 
@@ -1823,7 +1328,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 36. Submit dark_optimistic_oracle.aleo.collect_assertion_award
+## 36. Submit dark_optimistic_oracle.aleo.collect_assertion_award
 
 **What happened:** The frontend prepared dark_optimistic_oracle.aleo.collect_assertion_award and handed the displayed parameters to Shield for interactive approval.
 
@@ -1871,7 +1376,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 37. Submit dark_optimistic_oracle.aleo.collect_assertion_award
+## 37. Submit dark_optimistic_oracle.aleo.collect_assertion_award
 
 **What happened:** Shield accepted the wallet request. Its walletRequestId is temporary and does not prove that the transaction reached the blockchain.
 
@@ -1922,7 +1427,7 @@ Generated: 2026-10-03T05:47:57.699Z.
 }
 ```
 
-### 38. Submit dark_optimistic_oracle.aleo.collect_assertion_award
+## 38. Submit dark_optimistic_oracle.aleo.collect_assertion_award
 
 **What happened:** Shield reported accepted. The accepted on-chain transaction ID is at1q267dme3efmk7tnq6t92nxpvag84lnht28kyrgcj29r06yphf5gs32wf4z.
 

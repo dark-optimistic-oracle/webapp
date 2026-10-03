@@ -2,6 +2,13 @@
 
 ## 2026-10-03 — Screenshot demo instrumentation
 
+Public-path checkpoint: actual assertion creation and undisputed collection
+accepted from GitHub Pages; 10 screenshot slides composed as PDF and HTML.
+The journal importer preserves generated entries and refuses obvious secret
+material. Browser downloads worked, but protected Downloads filesystem access
+did not; the same journal was obtained through the demo preview. Private branches
+remain pending the authorized preparation work. LOG.md contains exact evidence.
+
 Added opt-in URL demo controls and initiating-step snapshots to the audit logger.
 Request/result JSON and Markdown carry matching run and step labels. Added a
 regression test for changing steps during an outstanding call. Lint, all 15

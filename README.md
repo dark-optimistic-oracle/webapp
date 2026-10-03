@@ -76,6 +76,12 @@ audit LOG.md** to preserve the journal; **View demo audit log** shows identical
 Markdown for inspection. Never include private records in slides. See
 [the screenplay](demo-slideshow/DEMO_SCREENPLAY.md).
 
+The demo folder also contains numbered screenshots, `slides.json`, an HTML
+slideshow (`index.html`) and `DEMO_SLIDESHOW.pdf`. Captions distinguish planned
+steps from executed evidence. Import a reviewed browser export with
+`node demo-slideshow/import_audit_log.mjs EXPORT.md LOG.md`; duplicate imports
+are detected by digest. Review the result, then commit and push LOG.md.
+
 The workflow in `.github/workflows/deploy-pages.yml` publishes from `main`. In repository Pages settings, select **GitHub Actions** as the source.
 
 The production build uses `/webapp/` as its Vite base path. A future custom domain can be attached through GitHub Pages without changing application routes.
