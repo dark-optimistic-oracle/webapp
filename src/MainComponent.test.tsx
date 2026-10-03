@@ -139,6 +139,8 @@ describe('MainComponent', () => {
     fireEvent.click(screen.getByRole('tab', { name: /create/i }));
     fireEvent.change(screen.getByLabelText('Assertion ID'), { target: { value: '777' } });
     fireEvent.change(screen.getByLabelText('Title field'), { target: { value: '888field' } });
+    // Creation must use the visible bond, not a hidden value from another tab.
+    fireEvent.change(screen.getByLabelText('Assertion bond'), { target: { value: '1000' } });
     fireEvent.click(screen.getByRole('button', { name: /submit assertion/i }));
 
     await waitFor(() => expect(executeTransactionMock).toHaveBeenCalledTimes(1));
@@ -148,7 +150,7 @@ describe('MainComponent', () => {
         function: 'create_assertion',
         inputs: [
           expect.stringMatching(
-            /id: 777field,[\s\S]*title: 888field,[\s\S]*cost: 100000000u128,[\s\S]*voter_stake: 1000000u128,[\s\S]*dispute_deadline_block_height: 10000u32,[\s\S]*voting_deadline_block_height: 20000u32/
+            /id: 777field,[\s\S]*title: 888field,[\s\S]*cost: 1000u128,[\s\S]*voter_stake: 1000000u128,[\s\S]*dispute_deadline_block_height: 10000u32,[\s\S]*voting_deadline_block_height: 20000u32/
           ),
         ],
         fee: 1_000_000,

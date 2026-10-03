@@ -182,3 +182,12 @@ committed deliberately. The call inventory and retained evidence live in
 steps for future experiments, QA runs, deployments, and Aleo call sequences. It
 also defines the evidence fields, secret-redaction rules, and explicit blocker
 reporting that future contributors and coding agents must follow.
+# Demo regression fix — 2026-10-03
+
+Live Testnet QA exposed a hidden creation-bond default: the Create tab omitted
+the shared `assertCost` input, so changing payout amounts did not change the
+100,000,000-unit default bond. An attempted 1,000-unit dispute was rejected by
+the contract's exact-bond check. Added a visible Assertion bond control to Create
+and changed the transaction-formatting regression test to assert its selected
+1,000-unit value. Lint, all 17 unit tests, and the production build passed.
+The rejected request and recovery sequence are preserved in LOG.md.

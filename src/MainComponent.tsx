@@ -635,6 +635,10 @@ export default function MainComponent() {
               <input value={assertTitle} onChange={(event) => setAssertTitle(event.target.value)} />
             </label>
             <label>
+              Assertion bond
+              <input value={assertCost} onChange={(event) => setAssertCost(event.target.value)} />
+            </label>
+            <label>
               Asserter payout amount
               <input value={asserterPayout} onChange={(event) => setAsserterPayout(event.target.value)} />
             </label>

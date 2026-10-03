@@ -1985,3 +1985,22 @@ Generated: 2026-10-03T05:47:57.699Z.
   }
 }
 ```
+# Private demo checkpoint — 2026-10-03
+
+Resumed the published Testnet app with the authorized QA wallet and demo tools.
+Private DOOR preparation (1,000 units) and private fee preparation (3 ALEO)
+were accepted. Shield returned one usable registry record. A first assertion
+at ID 2026100302 used the hidden 100,000,000-unit bond default; disputing it
+with 1,000 units was rejected. Readback confirmed its original bond and no
+disputer. No rejected request is represented as successful.
+
+Created a fresh assertion 2026100306 with the correct 1,000-unit bond, posted
+its matching dispute, and purchased a private voting right with a 100-unit
+stake. All three were accepted. A private confirm request was then approved;
+the exported checkpoint below preserves the observed finality at export time.
+Private records are fingerprinted only; all form plaintext was cleared before
+captures. The first assertion's 90,000,000-unit undisputed refund remains due
+after its grace period. Its 10% protocol fee is not recoverable.
+
+The visible creation-bond fix passed lint, 17 unit tests, and production build.
+This is an intermediate checkpoint, not completion of the full private demo.

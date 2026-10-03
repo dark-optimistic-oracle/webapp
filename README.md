@@ -95,3 +95,9 @@ The workflow in `.github/workflows/deploy-pages.yml` publishes from `main`. In r
 The production build uses `/webapp/` as its Vite base path. A future custom domain can be attached through GitHub Pages without changing application routes.
 The document carries a restrictive CSP and no-referrer policy; complete HTTP
 security headers will require a header-capable custom-domain front door.
+# Assertion bond visibility
+
+The Create tab shows **Assertion bond** explicitly. This is the DOOR amount burned
+when creating an assertion; a dispute must post exactly the same bond. Payout
+amount fields do not set the bond. Verify the bond and deadlines in Shield's
+advanced transaction details before approving.
